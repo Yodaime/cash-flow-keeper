@@ -1,0 +1,107 @@
+import { NavLink, useLocation } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  Receipt, 
+  Store, 
+  Users, 
+  FileText,
+  LogOut,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+
+const navigation = [
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Fechamentos', href: '/fechamentos', icon: Receipt },
+  { name: 'Lojas', href: '/lojas', icon: Store },
+  { name: 'Usuários', href: '/usuarios', icon: Users },
+  { name: 'Relatórios', href: '/relatorios', icon: FileText },
+];
+
+export function Sidebar() {
+  const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <aside 
+      className={cn(
+        "fixed left-0 top-0 z-40 h-screen bg-sidebar transition-all duration-300",
+        collapsed ? "w-20" : "w-64"
+      )}
+    >
+      <div className="flex h-full flex-col">
+        {/* Logo */}
+        <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
+          {!collapsed && (
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-gradient-gold flex items-center justify-center">
+                <span className="text-primary font-bold text-sm">CF</span>
+              </div>
+              <span className="font-display text-xl text-sidebar-foreground">
+                Closer<span className="text-sidebar-primary">Flow</span>
+              </span>
+            </div>
+          )}
+          {collapsed && (
+            <div className="h-8 w-8 rounded-lg bg-gradient-gold flex items-center justify-center mx-auto">
+              <span className="text-primary font-bold text-sm">CF</span>
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCollapsed(!collapsed)}
+            className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 space-y-1 px-3 py-4">
+          {navigation.map((item) => {
+            const isActive = location.pathname === item.href;
+            return (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-sidebar-accent text-sidebar-primary"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-sidebar-primary")} />
+                {!collapsed && <span>{item.name}</span>}
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        {/* User Section */}
+        <div className="border-t border-sidebar-border p-4">
+          <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
+            <div className="h-9 w-9 rounded-full bg-sidebar-accent flex items-center justify-center shrink-0">
+              <span className="text-sm font-medium text-sidebar-foreground">RC</span>
+            </div>
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-sidebar-foreground truncate">Roberto Costa</p>
+                <p className="text-xs text-sidebar-foreground/60 truncate">Administrador</p>
+              </div>
+            )}
+            {!collapsed && (
+              <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent shrink-0">
+                <LogOut className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
