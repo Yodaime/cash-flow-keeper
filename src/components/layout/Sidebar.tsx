@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -21,9 +22,20 @@ const navigation = [
   { name: 'Relatórios', href: '/relatorios', icon: FileText },
 ];
 
+const roleLabels = {
+  funcionaria: 'Funcionária',
+  gerente: 'Gerente',
+  administrador: 'Administrador',
+};
+
 export function Sidebar() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const { profile, role, signOut } = useAuth();
+
+  const initials = profile?.name
+    ? profile.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : '??';
 
   return (
     <aside 
@@ -86,16 +98,25 @@ export function Sidebar() {
         <div className="border-t border-sidebar-border p-4">
           <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
             <div className="h-9 w-9 rounded-full bg-sidebar-accent flex items-center justify-center shrink-0">
-              <span className="text-sm font-medium text-sidebar-foreground">RC</span>
+              <span className="text-sm font-medium text-sidebar-foreground">{initials}</span>
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">Roberto Costa</p>
-                <p className="text-xs text-sidebar-foreground/60 truncate">Administrador</p>
+                <p className="text-sm font-medium text-sidebar-foreground truncate">
+                  {profile?.name || 'Carregando...'}
+                </p>
+                <p className="text-xs text-sidebar-foreground/60 truncate">
+                  {role ? roleLabels[role] : ''}
+                </p>
               </div>
             )}
             {!collapsed && (
-              <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent shrink-0">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
+                onClick={signOut}
+              >
                 <LogOut className="h-4 w-4" />
               </Button>
             )}

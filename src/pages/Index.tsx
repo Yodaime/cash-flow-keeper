@@ -13,18 +13,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { mockClosings, mockStores } from '@/data/mockData';
+import { useClosings } from '@/hooks/useClosings';
+import { useStores } from '@/hooks/useStores';
+import { format } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Index = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  const todayClosings = mockClosings.filter(c => 
-    c.date.toDateString() === new Date().toDateString()
-  );
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const { data: closings, isLoading: closingsLoading } = useClosings({ startDate: today, endDate: today });
+  const { data: stores, isLoading: storesLoading } = useStores();
   
+  const todayClosings = closings || [];
   const okCount = todayClosings.filter(c => c.status === 'ok' || c.status === 'aprovado').length;
   const attentionCount = todayClosings.filter(c => c.status === 'atencao').length;
-  const totalValue = todayClosings.reduce((acc, c) => acc + c.countedValue, 0);
+  const totalValue = todayClosings.reduce((acc, c) => acc + Number(c.counted_value), 0);
+
+  const isLoading = closingsLoading || storesLoading;
 
   return (
     <Layout>
@@ -58,32 +64,43 @@ const Index = () => {
 
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Fechamentos Hoje"
-            value={todayClosings.length}
-            subtitle={`de ${mockStores.length} lojas`}
-            icon={<TrendingUp className="h-5 w-5" />}
-            variant="gold"
-          />
-          <StatsCard
-            title="Lojas Ativas"
-            value={mockStores.length}
-            icon={<Store className="h-5 w-5" />}
-          />
-          <StatsCard
-            title="Status OK"
-            value={okCount}
-            subtitle="Sem divergências"
-            icon={<CheckCircle className="h-5 w-5" />}
-            variant="success"
-          />
-          <StatsCard
-            title="Requer Atenção"
-            value={attentionCount}
-            subtitle="Divergências encontradas"
-            icon={<AlertTriangle className="h-5 w-5" />}
-            variant="warning"
-          />
+          {isLoading ? (
+            <>
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+            </>
+          ) : (
+            <>
+              <StatsCard
+                title="Fechamentos Hoje"
+                value={todayClosings.length}
+                subtitle={`de ${stores?.length || 0} lojas`}
+                icon={<TrendingUp className="h-5 w-5" />}
+                variant="gold"
+              />
+              <StatsCard
+                title="Lojas Ativas"
+                value={stores?.length || 0}
+                icon={<Store className="h-5 w-5" />}
+              />
+              <StatsCard
+                title="Status OK"
+                value={okCount}
+                subtitle="Sem divergências"
+                icon={<CheckCircle className="h-5 w-5" />}
+                variant="success"
+              />
+              <StatsCard
+                title="Requer Atenção"
+                value={attentionCount}
+                subtitle="Divergências encontradas"
+                icon={<AlertTriangle className="h-5 w-5" />}
+                variant="warning"
+              />
+            </>
+          )}
         </div>
 
         {/* Total do Dia */}
@@ -105,7 +122,7 @@ const Index = () => {
         </div>
 
         {/* Recent Closings */}
-        <RecentClosings closings={mockClosings} />
+        <RecentClosings />
       </div>
     </Layout>
   );

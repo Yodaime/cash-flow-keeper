@@ -9,9 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { mockStores, TOLERANCE_LIMIT } from '@/data/mockData';
+import { useStores } from '@/hooks/useStores';
+import { useCreateClosing } from '@/hooks/useClosings';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+
+const TOLERANCE_LIMIT = 10;
 
 interface ClosingFormProps {
   onSuccess?: () => void;
@@ -23,7 +25,9 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
   const [expectedValue, setExpectedValue] = useState<string>('');
   const [countedValue, setCountedValue] = useState<string>('');
   const [observations, setObservations] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: stores, isLoading: storesLoading } = useStores();
+  const createClosing = useCreateClosing();
 
   const parseValue = (value: string): number => {
     const cleaned = value.replace(/[^\d,]/g, '').replace(',', '.');
@@ -44,24 +48,22 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
     e.preventDefault();
     
     if (!storeId || !expectedValue || !countedValue) {
-      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const status = Math.abs(difference) <= TOLERANCE_LIMIT ? 'ok' : 'atencao';
-    
-    toast.success('Fechamento registrado com sucesso!', {
-      description: status === 'ok' 
-        ? 'O caixa está conferido.' 
-        : `Atenção: diferença de R$ ${Math.abs(difference).toFixed(2)}`,
+    await createClosing.mutateAsync({
+      store_id: storeId,
+      date: format(date, 'yyyy-MM-dd'),
+      expected_value: parseValue(expectedValue),
+      counted_value: parseValue(countedValue),
+      observations: observations || undefined,
     });
     
-    setIsSubmitting(false);
+    // Reset form
+    setStoreId('');
+    setExpectedValue('');
+    setCountedValue('');
+    setObservations('');
     onSuccess?.();
   };
 
@@ -102,10 +104,10 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
           <Select value={storeId} onValueChange={setStoreId}>
             <SelectTrigger>
               <Store className="mr-2 h-4 w-4 text-muted-foreground" />
-              <SelectValue placeholder="Selecione a loja" />
+              <SelectValue placeholder={storesLoading ? "Carregando..." : "Selecione a loja"} />
             </SelectTrigger>
             <SelectContent>
-              {mockStores.map((store) => (
+              {stores?.map((store) => (
                 <SelectItem key={store.id} value={store.id}>
                   {store.name} ({store.code})
                 </SelectItem>
@@ -183,8 +185,8 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
         />
       </div>
 
-      <Button type="submit" variant="gold" size="lg" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? (
+      <Button type="submit" variant="gold" size="lg" className="w-full" disabled={createClosing.isPending}>
+        {createClosing.isPending ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Registrando...
