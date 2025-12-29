@@ -1,13 +1,9 @@
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
-import { CashClosing } from '@/types';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, AlertTriangle, Clock, Shield } from 'lucide-react';
-
-interface RecentClosingsProps {
-  closings: CashClosing[];
-}
+import { CheckCircle2, AlertTriangle, Clock, Shield, Loader2 } from 'lucide-react';
+import { useClosings } from '@/hooks/useClosings';
 
 const statusConfig = {
   ok: { label: 'OK', variant: 'success' as const, icon: CheckCircle2 },
@@ -16,13 +12,37 @@ const statusConfig = {
   aprovado: { label: 'Aprovado', variant: 'success' as const, icon: Shield },
 };
 
-export function RecentClosings({ closings }: RecentClosingsProps) {
+export function RecentClosings() {
+  const { data: closings, isLoading } = useClosings();
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     }).format(value);
   };
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border bg-card shadow-soft p-8 flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!closings || closings.length === 0) {
+    return (
+      <div className="rounded-xl border bg-card shadow-soft">
+        <div className="border-b p-6">
+          <h3 className="font-display text-lg font-semibold">Fechamentos Recentes</h3>
+          <p className="text-sm text-muted-foreground mt-1">Últimos fechamentos registrados</p>
+        </div>
+        <div className="p-8 text-center text-muted-foreground">
+          Nenhum fechamento registrado ainda.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl border bg-card shadow-soft">
@@ -57,21 +77,21 @@ export function RecentClosings({ closings }: RecentClosingsProps) {
                   )} />
                 </div>
                 <div>
-                  <p className="font-medium">{closing.storeName}</p>
+                  <p className="font-medium">{closing.stores?.name || 'Loja'}</p>
                   <p className="text-sm text-muted-foreground">
-                    {format(closing.date, "dd 'de' MMM", { locale: ptBR })} • {closing.createdByName}
+                    {format(new Date(closing.date), "dd 'de' MMM", { locale: ptBR })}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <p className="font-medium">{formatCurrency(closing.countedValue)}</p>
+                  <p className="font-medium">{formatCurrency(Number(closing.counted_value))}</p>
                   {closing.difference !== 0 && (
                     <p className={cn(
                       "text-sm",
-                      closing.difference > 0 ? "text-success" : "text-destructive"
+                      Number(closing.difference) > 0 ? "text-success" : "text-destructive"
                     )}>
-                      {closing.difference > 0 ? '+' : ''}{formatCurrency(closing.difference)}
+                      {Number(closing.difference) > 0 ? '+' : ''}{formatCurrency(Number(closing.difference))}
                     </p>
                   )}
                 </div>
