@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Plus, Filter, Download } from 'lucide-react';
+import { Plus, Filter } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { ClosingForm } from '@/components/closings/ClosingForm';
+import { ExportImport } from '@/components/closings/ExportImport';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -77,10 +78,7 @@ export default function Fechamentos() {
             <p className="text-muted-foreground mt-1">Gerencie todos os fechamentos de caixa</p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="gap-2">
-              <Download className="h-4 w-4" />
-              Exportar
-            </Button>
+            <ExportImport closings={filteredClosings} />
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="gold" className="gap-2">
