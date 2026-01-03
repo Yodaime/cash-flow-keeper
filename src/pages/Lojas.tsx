@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Store, Trash2, MoreHorizontal, Loader2 } from 'lucide-react';
+import { Plus, Store, Trash2, MoreHorizontal, Loader2, Pencil } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,20 +12,35 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useStores, useCreateStore, useDeleteStore } from '@/hooks/useStores';
+import { useStores, useCreateStore, useUpdateStore, useDeleteStore, Store as StoreType } from '@/hooks/useStores';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 
 export default function Lojas() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingStore, setEditingStore] = useState<StoreType | null>(null);
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [unit, setUnit] = useState('');
 
   const { data: stores, isLoading } = useStores();
   const createStore = useCreateStore();
+  const updateStore = useUpdateStore();
   const deleteStore = useDeleteStore();
+
+  const resetForm = () => {
+    setName(''); setCode(''); setUnit('');
+    setEditingStore(null);
+  };
+
+  const openEditDialog = (store: StoreType) => {
+    setEditingStore(store);
+    setName(store.name);
+    setCode(store.code);
+    setUnit(store.unit || '');
+    setIsDialogOpen(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,9 +48,19 @@ export default function Lojas() {
       toast.error('Nome e código são obrigatórios');
       return;
     }
-    await createStore.mutateAsync({ name, code, unit: unit || undefined });
-    setName(''); setCode(''); setUnit('');
+    
+    if (editingStore) {
+      await updateStore.mutateAsync({ id: editingStore.id, name, code, unit: unit || undefined });
+    } else {
+      await createStore.mutateAsync({ name, code, unit: unit || undefined });
+    }
+    resetForm();
     setIsDialogOpen(false);
+  };
+
+  const handleDialogChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) resetForm();
   };
 
   return (
@@ -46,14 +71,18 @@ export default function Lojas() {
             <h1 className="font-display text-3xl font-bold tracking-tight">Lojas</h1>
             <p className="text-muted-foreground mt-1">Gerencie as lojas da rede</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
             <DialogTrigger asChild>
               <Button variant="gold" className="gap-2"><Plus className="h-4 w-4" />Nova Loja</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="font-display text-2xl">Cadastrar Loja</DialogTitle>
-                <DialogDescription>Adicione uma nova loja à rede.</DialogDescription>
+                <DialogTitle className="font-display text-2xl">
+                  {editingStore ? 'Editar Loja' : 'Cadastrar Loja'}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingStore ? 'Atualize as informações da loja.' : 'Adicione uma nova loja à rede.'}
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
@@ -68,8 +97,12 @@ export default function Lojas() {
                   <Label htmlFor="unit">Unidade/Local</Label>
                   <Input id="unit" placeholder="Ex: Shopping Center" value={unit} onChange={(e) => setUnit(e.target.value)} />
                 </div>
-                <Button type="submit" variant="gold" className="w-full" disabled={createStore.isPending}>
-                  {createStore.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvando...</> : 'Cadastrar Loja'}
+                <Button type="submit" variant="gold" className="w-full" disabled={createStore.isPending || updateStore.isPending}>
+                  {(createStore.isPending || updateStore.isPending) ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvando...</>
+                  ) : (
+                    editingStore ? 'Salvar Alterações' : 'Cadastrar Loja'
+                  )}
                 </Button>
               </form>
             </DialogContent>
@@ -108,6 +141,9 @@ export default function Lojas() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEditDialog(store)}>
+                            <Pencil className="mr-2 h-4 w-4" />Editar
+                          </DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive" onClick={() => deleteStore.mutate(store.id)}>
                             <Trash2 className="mr-2 h-4 w-4" />Remover
                           </DropdownMenuItem>
