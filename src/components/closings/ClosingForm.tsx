@@ -15,6 +15,12 @@ import { cn } from '@/lib/utils';
 
 const TOLERANCE_LIMIT = 10;
 
+const PREDEFINED_OBSERVATIONS = [
+  'Fechamento dentro do esperado',
+  'Troco conferido e correto',
+  'Sem movimentação atípica',
+];
+
 interface ClosingFormProps {
   onSuccess?: () => void;
 }
@@ -26,6 +32,7 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
   const [expectedValue, setExpectedValue] = useState<string>('');
   const [countedValue, setCountedValue] = useState<string>('');
   const [observations, setObservations] = useState<string>('');
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
 
   const { data: stores, isLoading: storesLoading } = useStores();
   const createClosing = useCreateClosing();
@@ -65,6 +72,7 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
     setExpectedValue('');
     setCountedValue('');
     setObservations('');
+    setSelectedPreset(null);
     onSuccess?.();
   };
 
@@ -183,12 +191,57 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
           <FileText className="h-4 w-4" />
           Observações (opcional)
         </Label>
+        
+        {/* Predefined Options */}
+        {!selectedPreset && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {PREDEFINED_OBSERVATIONS.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => {
+                  setSelectedPreset(preset);
+                  setObservations(preset);
+                }}
+                className="px-3 py-1.5 text-sm rounded-md border border-border/50 bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+              >
+                {preset}
+              </button>
+            ))}
+          </div>
+        )}
+        
+        {selectedPreset && (
+          <div className="flex items-center gap-2 mb-2">
+            <span className="px-3 py-1.5 text-sm rounded-md bg-primary/10 text-primary border border-primary/20">
+              {selectedPreset}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedPreset(null);
+                setObservations('');
+              }}
+              className="text-xs text-muted-foreground hover:text-foreground underline"
+            >
+              Limpar
+            </button>
+          </div>
+        )}
+        
         <Textarea
           id="observations"
-          placeholder="Adicione observações sobre o fechamento..."
-          value={observations}
-          onChange={(e) => setObservations(e.target.value)}
-          rows={3}
+          placeholder={selectedPreset ? "Adicione mais detalhes (opcional)..." : "Adicione observações sobre o fechamento..."}
+          value={selectedPreset ? observations.replace(selectedPreset, '').trim() : observations}
+          onChange={(e) => {
+            if (selectedPreset) {
+              const additionalText = e.target.value.trim();
+              setObservations(additionalText ? `${selectedPreset}. ${additionalText}` : selectedPreset);
+            } else {
+              setObservations(e.target.value);
+            }
+          }}
+          rows={2}
         />
       </div>
 

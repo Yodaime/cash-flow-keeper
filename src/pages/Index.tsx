@@ -3,6 +3,7 @@ import { Plus, TrendingUp, Store, AlertTriangle, CheckCircle, BarChart3 } from '
 import { Layout } from '@/components/layout/Layout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { RecentClosings } from '@/components/dashboard/RecentClosings';
+import { EvolutionChart } from '@/components/dashboard/EvolutionChart';
 import { ClosingForm } from '@/components/closings/ClosingForm';
 import { CashAnalysisDialog } from '@/components/dashboard/CashAnalysisDialog';
 import { Button } from '@/components/ui/button';
@@ -130,6 +131,9 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Evolution Chart */}
+        <EvolutionChart />
 
         {/* Recent Closings */}
         <RecentClosings />
