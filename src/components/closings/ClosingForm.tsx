@@ -232,10 +232,10 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
         <Textarea
           id="observations"
           placeholder={selectedPreset ? "Adicione mais detalhes (opcional)..." : "Adicione observações sobre o fechamento..."}
-          value={selectedPreset ? observations.replace(selectedPreset, '').trim() : observations}
+          value={selectedPreset ? observations.slice(selectedPreset.length).replace(/^\.\s*/, '') : observations}
           onChange={(e) => {
             if (selectedPreset) {
-              const additionalText = e.target.value.trim();
+              const additionalText = e.target.value;
               setObservations(additionalText ? `${selectedPreset}. ${additionalText}` : selectedPreset);
             } else {
               setObservations(e.target.value);
