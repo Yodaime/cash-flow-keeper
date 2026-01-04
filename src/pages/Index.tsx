@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Plus, TrendingUp, Store, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Plus, TrendingUp, Store, AlertTriangle, CheckCircle, BarChart3 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { RecentClosings } from '@/components/dashboard/RecentClosings';
 import { ClosingForm } from '@/components/closings/ClosingForm';
+import { CashAnalysisDialog } from '@/components/dashboard/CashAnalysisDialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const Index = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
   
   const today = format(new Date(), 'yyyy-MM-dd');
   const { data: closings, isLoading: closingsLoading } = useClosings({ startDate: today, endDate: today });
@@ -43,23 +45,31 @@ const Index = () => {
               Visão geral dos fechamentos de caixa
             </p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="gold" size="lg" className="gap-2">
-                <Plus className="h-5 w-5" />
-                Novo Fechamento
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle className="font-display text-2xl">Registrar Fechamento</DialogTitle>
-                <DialogDescription>
-                  Preencha os dados do fechamento de caixa. O processo leva menos de 2 minutos.
-                </DialogDescription>
-              </DialogHeader>
-              <ClosingForm onSuccess={() => setIsDialogOpen(false)} />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Button variant="outline" size="lg" className="gap-2" onClick={() => setIsAnalysisOpen(true)}>
+              <BarChart3 className="h-5 w-5" />
+              Análise do Caixa
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="gold" size="lg" className="gap-2">
+                  <Plus className="h-5 w-5" />
+                  Novo Fechamento
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle className="font-display text-2xl">Registrar Fechamento</DialogTitle>
+                  <DialogDescription>
+                    Preencha os dados do fechamento de caixa. O processo leva menos de 2 minutos.
+                  </DialogDescription>
+                </DialogHeader>
+                <ClosingForm onSuccess={() => setIsDialogOpen(false)} />
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          <CashAnalysisDialog open={isAnalysisOpen} onOpenChange={setIsAnalysisOpen} />
         </div>
 
         {/* Stats Grid */}

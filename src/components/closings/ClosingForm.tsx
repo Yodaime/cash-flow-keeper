@@ -21,6 +21,7 @@ interface ClosingFormProps {
 
 export function ClosingForm({ onSuccess }: ClosingFormProps) {
   const [date, setDate] = useState<Date>(new Date());
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [storeId, setStoreId] = useState<string>('');
   const [expectedValue, setExpectedValue] = useState<string>('');
   const [countedValue, setCountedValue] = useState<string>('');
@@ -73,7 +74,7 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
         {/* Data */}
         <div className="space-y-2">
           <Label htmlFor="date">Data do Fechamento</Label>
-          <Popover>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -90,9 +91,15 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
               <Calendar
                 mode="single"
                 selected={date}
-                onSelect={(d) => d && setDate(d)}
+                onSelect={(d) => {
+                  if (d) {
+                    setDate(d);
+                    setCalendarOpen(false);
+                  }
+                }}
                 initialFocus
                 locale={ptBR}
+                className="pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
