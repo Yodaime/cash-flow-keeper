@@ -11,8 +11,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useLayout } from './Layout';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -30,7 +30,7 @@ const roleLabels = {
 
 export function Sidebar() {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, setCollapsed } = useLayout();
   const { profile, role, signOut } = useAuth();
 
   const initials = profile?.name

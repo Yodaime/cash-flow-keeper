@@ -156,3 +156,35 @@ export const useDeleteUser = () => {
     },
   });
 };
+
+export const useResetUserPassword = () => {
+  return useMutation({
+    mutationFn: async ({ userId, newPassword }: { userId: string; newPassword: string }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await supabase.functions.invoke('reset-user-password', {
+        body: { userId, newPassword },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao redefinir senha');
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Senha redefinida com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao redefinir senha: ${error.message}`);
+    },
+  });
+};
