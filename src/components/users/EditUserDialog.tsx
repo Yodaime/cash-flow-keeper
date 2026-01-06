@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useStores } from '@/hooks/useStores';
-import { useUpdateUserProfile, useUpdateUserRole, useUpdateUserStore } from '@/hooks/useUsers';
+import { useUpdateUserProfile, useUpdateUserRole, useUpdateUserStore, useResetUserPassword } from '@/hooks/useUsers';
 import { UserRole } from '@/types';
 import { Profile } from '@/hooks/useUsers';
-import { Loader2 } from 'lucide-react';
+import { Loader2, KeyRound } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface EditUserDialogProps {
   user: Profile | null;
@@ -27,12 +28,15 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
   const updateProfile = useUpdateUserProfile();
   const updateRole = useUpdateUserRole();
   const updateStore = useUpdateUserStore();
+  const resetPassword = useResetUserPassword();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [storeId, setStoreId] = useState<string>('none');
   const [role, setRole] = useState<UserRole>('funcionaria');
+  const [newPassword, setNewPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -40,8 +44,40 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
       setEmail(user.email);
       setStoreId(user.store_id || 'none');
       setRole(user.user_roles?.[0]?.role || 'funcionaria');
+      setNewPassword('');
     }
   }, [user]);
+
+  const handleResetPassword = async () => {
+    if (!user || !newPassword) {
+      toast({
+        title: 'Erro',
+        description: 'Digite uma nova senha.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: 'Erro',
+        description: 'A senha deve ter pelo menos 6 caracteres.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsResettingPassword(true);
+    try {
+      await resetPassword.mutateAsync({
+        userId: user.id,
+        newPassword,
+      });
+      setNewPassword('');
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,6 +144,31 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
               placeholder="email@exemplo.com"
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="newPassword">Redefinir Senha</Label>
+            <div className="flex gap-2">
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Nova senha (mín. 6 caracteres)"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleResetPassword}
+                disabled={isResettingPassword || !newPassword}
+              >
+                {isResettingPassword ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <KeyRound className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2">
