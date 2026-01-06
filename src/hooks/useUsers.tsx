@@ -47,6 +47,31 @@ export const useUsers = () => {
   });
 };
 
+export const useUpdateUserProfile = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ userId, name, email }: { userId: string; name: string; email: string }) => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ name, email })
+        .eq('id', userId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success('Perfil atualizado com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao atualizar perfil: ${error.message}`);
+    },
+  });
+};
+
 export const useUpdateUserRole = () => {
   const queryClient = useQueryClient();
   
@@ -99,6 +124,35 @@ export const useUpdateUserStore = () => {
     },
     onError: (error: any) => {
       toast.error(`Erro ao atualizar loja do usuário: ${error.message}`);
+    },
+  });
+};
+
+export const useDeleteUser = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      // Delete user role first
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+      
+      // Delete profile
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success('Usuário removido com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao remover usuário: ${error.message}`);
     },
   });
 };
