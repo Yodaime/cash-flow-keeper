@@ -4,28 +4,30 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
 
+@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
+
 @layer base {
   :root {
-    --background: 220 20% 97%;
+    --background: 0 0% 96.0784%;
     --foreground: 220 30% 10%;
 
-    --card: 0 0% 100%;
+    --card: 180 2% 97%;
     --card-foreground: 220 30% 10%;
 
-    --popover: 0 0% 100%;
+    --popover: 210 40% 98.0392%;
     --popover-foreground: 220 30% 10%;
 
-    --primary: 220 25% 15%;
+    --primary: 0 0% 9.0196%;
     --primary-foreground: 45 90% 65%;
 
     --secondary: 45 70% 50%;
-    --secondary-foreground: 220 25% 10%;
+    --secondary-foreground: 215 13.7931% 34.1176%;
 
     --muted: 220 15% 92%;
     --muted-foreground: 220 10% 45%;
 
     --accent: 45 85% 55%;
-    --accent-foreground: 220 25% 10%;
+    --accent-foreground: 0 0% 3%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -40,7 +42,7 @@
     --input: 220 15% 88%;
     --ring: 45 70% 50%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
     --sidebar-background: 220 25% 12%;
     --sidebar-foreground: 220 10% 85%;
@@ -55,6 +57,11 @@
     --gradient-gold: linear-gradient(135deg, hsl(45 85% 55%), hsl(38 92% 50%));
     --gradient-dark: linear-gradient(180deg, hsl(220 25% 15%), hsl(220 30% 10%));
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 20% 98%));
+    --font-sans: Roboto, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+    --shadow-sm: 0px 1px 1.5px 0px hsla(0, 0%, 0%, 0.1);
+    --shadow: 0px 1px 3px 0px hsla(0, 0%, 0%, 0.1);
+    --shadow-md: 0px 1px 4.5px 0px hsla(0, 0%, 0%, 0.1);
+    --shadow-lg: 0px 1px 7.5px 0px hsla(0, 0%, 0%, 0.1);
   }
 
   .dark {
@@ -100,6 +107,12 @@
     --sidebar-accent-foreground: 220 10% 85%;
     --sidebar-border: 220 25% 12%;
     --sidebar-ring: 45 70% 50%;
+    --font-sans: Roboto, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+    --radius: 0.5rem;
+    --shadow-sm: 0px 1px 1.5px 0px hsla(0, 0%, 0%, 0.1);
+    --shadow: 0px 1px 3px 0px hsla(0, 0%, 0%, 0.1);
+    --shadow-md: 0px 1px 4.5px 0px hsla(0, 0%, 0%, 0.1);
+    --shadow-lg: 0px 1px 7.5px 0px hsla(0, 0%, 0%, 0.1);
   }
 }
 
