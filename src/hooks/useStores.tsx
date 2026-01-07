@@ -23,6 +23,8 @@ export const useStores = () => {
       if (error) throw error;
       return data as Store[];
     },
+    staleTime: 2 * 60 * 1000, // 2 minutes - stores don't change often
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 

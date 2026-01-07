@@ -1,12 +1,19 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/types';
 
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  store_id: string | null;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  profile: { id: string; name: string; email: string; store_id: string | null } | null;
+  profile: UserProfile | null;
   role: UserRole | null;
   loading: boolean;
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
@@ -16,40 +23,64 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Cache for user data to prevent redundant fetches
+const userDataCache = new Map<string, { profile: UserProfile | null; role: UserRole | null; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<{ id: string; name: string; email: string; store_id: string | null } | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const fetchingRef = useRef(false);
 
-  const fetchUserData = async (userId: string) => {
+  const fetchUserData = useCallback(async (userId: string) => {
+    // Check cache first
+    const cached = userDataCache.get(userId);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      setProfile(cached.profile);
+      setRole(cached.role);
+      return;
+    }
+
+    // Prevent concurrent fetches
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+
     try {
-      // Fetch profile
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('id, name, email, store_id')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (profileData) {
-        setProfile(profileData);
-      }
+      // Fetch profile and role in parallel
+      const [profileResult, roleResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, name, email, store_id')
+          .eq('id', userId)
+          .maybeSingle(),
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .maybeSingle()
+      ]);
 
-      // Fetch role
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      if (roleData) {
-        setRole(roleData.role as UserRole);
-      }
+      const profileData = profileResult.data;
+      const roleData = roleResult.data?.role as UserRole | null;
+
+      // Update cache
+      userDataCache.set(userId, {
+        profile: profileData,
+        role: roleData,
+        timestamp: Date.now()
+      });
+
+      setProfile(profileData);
+      setRole(roleData);
     } catch (error) {
       console.error('Error fetching user data:', error);
+    } finally {
+      fetchingRef.current = false;
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -82,9 +113,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchUserData]);
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = useCallback(async (email: string, password: string, name: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -96,21 +127,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
     return { error };
-  };
+  }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     return { error };
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
+    // Clear cache on sign out
+    userDataCache.clear();
     await supabase.auth.signOut();
     setProfile(null);
     setRole(null);
-  };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, session, profile, role, loading, signUp, signIn, signOut }}>

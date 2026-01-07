@@ -18,32 +18,33 @@ export const useUsers = () => {
   return useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // Fetch profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          stores (name)
-        `)
-        .order('name');
+      // Fetch profiles and roles in parallel
+      const [profilesResult, rolesResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select(`
+            *,
+            stores (name)
+          `)
+          .order('name'),
+        supabase
+          .from('user_roles')
+          .select('user_id, role')
+      ]);
       
-      if (profilesError) throw profilesError;
-      
-      // Fetch roles for all users
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-      
-      if (rolesError) throw rolesError;
+      if (profilesResult.error) throw profilesResult.error;
+      if (rolesResult.error) throw rolesResult.error;
       
       // Merge roles into profiles
-      const profilesWithRoles = profiles?.map(profile => ({
+      const profilesWithRoles = profilesResult.data?.map(profile => ({
         ...profile,
-        user_roles: roles?.filter(r => r.user_id === profile.id) || []
+        user_roles: rolesResult.data?.filter(r => r.user_id === profile.id) || []
       }));
       
       return profilesWithRoles as Profile[];
     },
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
