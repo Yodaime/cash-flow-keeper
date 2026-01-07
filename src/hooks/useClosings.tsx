@@ -53,6 +53,8 @@ export const useClosings = (filters?: { storeId?: string; startDate?: string; en
       if (error) throw error;
       return data as CashClosing[];
     },
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
