@@ -20,8 +20,16 @@ Deno.serve(async (req) => {
       throw new Error('Authorization header required');
     }
 
-    const anonClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!);
-    const { data: { user: requestingUser }, error: authError } = await anonClient.auth.getUser(
+    // Use admin client for all operations to bypass RLS
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+
+    // Verify the user from the token
+    const { data: { user: requestingUser }, error: authError } = await adminClient.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
 
@@ -29,14 +37,15 @@ Deno.serve(async (req) => {
       throw new Error('Invalid authentication');
     }
 
-    // Check if requesting user is admin
-    const { data: roleData, error: roleError } = await anonClient
+    // Check if requesting user is admin using admin client to bypass RLS
+    const { data: roleData, error: roleError } = await adminClient
       .from('user_roles')
       .select('role')
       .eq('user_id', requestingUser.id)
       .single();
 
     if (roleError || roleData?.role !== 'administrador') {
+      console.error('Role check failed:', { roleError, roleData, userId: requestingUser.id });
       throw new Error('Only administrators can reset passwords');
     }
 
@@ -51,13 +60,6 @@ Deno.serve(async (req) => {
     }
 
     // Use admin client to update user password
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
-
     const { error } = await adminClient.auth.admin.updateUserById(userId, {
       password: newPassword,
     });
