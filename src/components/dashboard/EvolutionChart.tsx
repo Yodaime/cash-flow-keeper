@@ -1,17 +1,37 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { format, subDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, Calendar } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useClosings } from '@/hooks/useClosings';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+
+type DateRange = { from: Date | undefined; to: Date | undefined };
 
 export function EvolutionChart() {
-  const endDate = format(new Date(), 'yyyy-MM-dd');
-  const startDate = format(subDays(new Date(), 14), 'yyyy-MM-dd');
+  const today = new Date();
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: today,
+    to: today,
+  });
+
+  const startDate = dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : format(today, 'yyyy-MM-dd');
+  const endDate = dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : format(today, 'yyyy-MM-dd');
   
   const { data: closings, isLoading } = useClosings({ startDate, endDate });
+
+  const getDateRangeLabel = () => {
+    if (!dateRange.from) return 'Selecionar período';
+    if (!dateRange.to || dateRange.from.getTime() === dateRange.to.getTime()) {
+      return format(dateRange.from, "dd 'de' MMMM", { locale: ptBR });
+    }
+    return `${format(dateRange.from, 'dd/MM')} - ${format(dateRange.to, 'dd/MM', { locale: ptBR })}`;
+  };
 
   const chartData = useMemo(() => {
     if (!closings) return [];
@@ -76,14 +96,77 @@ export function EvolutionChart() {
     );
   }
 
+  const presetRanges = [
+    { label: 'Hoje', days: 0 },
+    { label: '7 dias', days: 7 },
+    { label: '15 dias', days: 15 },
+    { label: '30 dias', days: 30 },
+  ];
+
+  const handlePresetClick = (days: number) => {
+    if (days === 0) {
+      setDateRange({ from: today, to: today });
+    } else {
+      setDateRange({ from: subDays(today, days - 1), to: today });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-primary" />
-          Evolução do Caixa
-        </CardTitle>
-        <CardDescription>Comparativo entre valor esperado e contado nos últimos 15 dias</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Evolução do Caixa
+            </CardTitle>
+            <CardDescription>
+              {dateRange.from?.getTime() === dateRange.to?.getTime() 
+                ? 'Registros do dia' 
+                : 'Comparativo entre valor esperado e contado'}
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              {presetRanges.map((preset) => (
+                <Button
+                  key={preset.label}
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "text-xs h-8",
+                    preset.days === 0 && dateRange.from?.getTime() === today.getTime() && dateRange.to?.getTime() === today.getTime() && "bg-primary text-primary-foreground",
+                    preset.days === 7 && dateRange.from?.getTime() === subDays(today, 6).getTime() && "bg-primary text-primary-foreground",
+                    preset.days === 15 && dateRange.from?.getTime() === subDays(today, 14).getTime() && "bg-primary text-primary-foreground",
+                    preset.days === 30 && dateRange.from?.getTime() === subDays(today, 29).getTime() && "bg-primary text-primary-foreground",
+                  )}
+                  onClick={() => handlePresetClick(preset.days)}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  {getDateRangeLabel()}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <CalendarComponent
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange.from}
+                  selected={{ from: dateRange.from, to: dateRange.to }}
+                  onSelect={(range) => setDateRange({ from: range?.from, to: range?.to || range?.from })}
+                  numberOfMonths={2}
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
