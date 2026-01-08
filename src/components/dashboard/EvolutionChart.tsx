@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react';
 import { format, subDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { TrendingUp, Calendar } from 'lucide-react';
+import { TrendingUp, Calendar, Store } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useClosings } from '@/hooks/useClosings';
+import { useStores } from '@/hooks/useStores';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 type DateRange = { from: Date | undefined; to: Date | undefined };
@@ -19,11 +21,23 @@ export function EvolutionChart() {
     from: today,
     to: today,
   });
+  const [selectedStoreId, setSelectedStoreId] = useState<string>('all');
+
+  const { data: stores } = useStores();
 
   const startDate = dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : format(today, 'yyyy-MM-dd');
   const endDate = dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : format(today, 'yyyy-MM-dd');
   
-  const { data: closings, isLoading } = useClosings({ startDate, endDate });
+  const { data: closings, isLoading } = useClosings({ 
+    startDate, 
+    endDate,
+    storeId: selectedStoreId !== 'all' ? selectedStoreId : undefined 
+  });
+
+  const selectedStoreName = useMemo(() => {
+    if (selectedStoreId === 'all') return 'Todas as lojas';
+    return stores?.find(s => s.id === selectedStoreId)?.name || 'Loja';
+  }, [selectedStoreId, stores]);
 
   const getDateRangeLabel = () => {
     if (!dateRange.from) return 'Selecionar período';
@@ -122,11 +136,25 @@ export function EvolutionChart() {
             </CardTitle>
             <CardDescription>
               {dateRange.from?.getTime() === dateRange.to?.getTime() 
-                ? 'Registros do dia' 
-                : 'Comparativo entre valor esperado e contado'}
+                ? `Registros do dia - ${selectedStoreName}` 
+                : `Comparativo - ${selectedStoreName}`}
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <Select value={selectedStoreId} onValueChange={setSelectedStoreId}>
+              <SelectTrigger className="w-[160px] h-8 text-xs">
+                <Store className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Selecionar loja" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as lojas</SelectItem>
+                {stores?.map((store) => (
+                  <SelectItem key={store.id} value={store.id}>
+                    {store.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="flex gap-1">
               {presetRanges.map((preset) => (
                 <Button
