@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Plus, Filter } from 'lucide-react';
+import { Plus, Filter, Pencil, Trash2 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { ClosingForm } from '@/components/closings/ClosingForm';
 import { ExportImport } from '@/components/closings/ExportImport';
+import { EditClosingDialog } from '@/components/closings/EditClosingDialog';
+import { DeleteClosingDialog } from '@/components/closings/DeleteClosingDialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -29,8 +31,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useClosings, useUpdateClosingStatus } from '@/hooks/useClosings';
+import { useClosings, useUpdateClosingStatus, CashClosing } from '@/hooks/useClosings';
 import { useStores } from '@/hooks/useStores';
+import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -39,6 +42,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -53,12 +57,17 @@ export default function Fechamentos() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [storeFilter, setStoreFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [editingClosing, setEditingClosing] = useState<CashClosing | null>(null);
+  const [deletingClosing, setDeletingClosing] = useState<CashClosing | null>(null);
 
   const { data: stores } = useStores();
   const { data: closings, isLoading } = useClosings({
     storeId: storeFilter !== 'all' ? storeFilter : undefined,
   });
   const updateStatus = useUpdateClosingStatus();
+  const { role } = useAuth();
+  
+  const isAdmin = role === 'administrador';
 
   const filteredClosings = (closings || []).filter(closing => {
     if (statusFilter !== 'all' && closing.status !== statusFilter) return false;
@@ -180,6 +189,22 @@ export default function Fechamentos() {
                                   Aprovar
                                 </DropdownMenuItem>
                               )}
+                              {isAdmin && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => setEditingClosing(closing)}>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => setDeletingClosing(closing)}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Remover
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -191,6 +216,18 @@ export default function Fechamentos() {
             </Table>
           </div>
         )}
+
+        <EditClosingDialog
+          closing={editingClosing}
+          open={!!editingClosing}
+          onOpenChange={(open) => !open && setEditingClosing(null)}
+        />
+
+        <DeleteClosingDialog
+          closing={deletingClosing}
+          open={!!deletingClosing}
+          onOpenChange={(open) => !open && setDeletingClosing(null)}
+        />
       </div>
     </Layout>
   );

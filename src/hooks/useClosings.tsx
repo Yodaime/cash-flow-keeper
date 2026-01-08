@@ -134,3 +134,69 @@ export const useUpdateClosingStatus = () => {
     },
   });
 };
+
+export const useUpdateClosing = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (closing: {
+      id: string;
+      store_id: string;
+      date: string;
+      expected_value: number;
+      counted_value: number;
+      observations: string | null;
+    }) => {
+      const difference = closing.counted_value - closing.expected_value;
+      const TOLERANCE_LIMIT = 10;
+      const status: ClosingStatus = Math.abs(difference) <= TOLERANCE_LIMIT ? 'ok' : 'atencao';
+      
+      const { data, error } = await supabase
+        .from('cash_closings')
+        .update({
+          store_id: closing.store_id,
+          date: closing.date,
+          expected_value: closing.expected_value,
+          counted_value: closing.counted_value,
+          difference,
+          status,
+          observations: closing.observations,
+        })
+        .eq('id', closing.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['closings'] });
+      toast.success('Fechamento atualizado com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao atualizar fechamento: ${error.message}`);
+    },
+  });
+};
+
+export const useDeleteClosing = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('cash_closings')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['closings'] });
+      toast.success('Fechamento removido com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao remover fechamento: ${error.message}`);
+    },
+  });
+};
