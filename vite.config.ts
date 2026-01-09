@@ -7,9 +7,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    allowedHosts: [
-      'closer-flow.onrender.com'
-    ],
+    allowedHosts: 'all',
     port: 8080,
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
