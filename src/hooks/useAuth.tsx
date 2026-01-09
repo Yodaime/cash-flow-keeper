@@ -138,11 +138,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signOut = useCallback(async () => {
-    // Clear cache on sign out
-    userDataCache.clear();
-    await supabase.auth.signOut();
+    // Clear local state first to ensure UI updates immediately
     setProfile(null);
     setRole(null);
+    setUser(null);
+    setSession(null);
+    userDataCache.clear();
+    
+    // Then attempt to sign out from Supabase (ignore errors if session already expired)
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      // Session might already be expired, just redirect to login
+      console.log('Sign out completed (session may have already expired)');
+    }
   }, []);
 
   return (
