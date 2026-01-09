@@ -215,7 +215,7 @@ export function CashAnalysisDialog({ open, onOpenChange }: CashAnalysisDialogPro
           </Popover>
         </div>
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 max-h-[60vh] pr-4">
           {isLoading ? (
             <div className="space-y-4 py-4">
               <Skeleton className="h-24" />
