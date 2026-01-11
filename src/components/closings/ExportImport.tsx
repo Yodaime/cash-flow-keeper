@@ -84,7 +84,7 @@ export function ExportImport({ closings }: ExportImportProps) {
 
   const downloadTemplate = () => {
     const headers = ['Data', 'Código Loja', 'Valor Esperado', 'Valor Contado', 'Observações'];
-    const exampleRow = ['2024-12-29', 'JC001', '5000,00', '4980,50', 'Exemplo de observação'];
+    const exampleRow = ['29/12/2024', 'JC001', '5000,00', '4980,50', 'Exemplo de observação'];
     
     const csvContent = [
       headers.join(';'),
@@ -118,10 +118,23 @@ export function ExportImport({ closings }: ExportImportProps) {
 
       const [dateStr, storeCode, expectedStr, countedStr, observations] = cells;
 
-      // Validate date
-      const dateMatch = dateStr.match(/^\d{4}-\d{2}-\d{2}$/);
-      if (!dateMatch) {
-        parseErrors.push(`Linha ${i + 1}: Data inválida "${dateStr}". Use formato YYYY-MM-DD`);
+      // Validate and parse date (accepts DD/MM/YYYY, DD-MM-YYYY, or YYYY-MM-DD)
+      let parsedDate: string | null = null;
+      
+      // Brazilian format: DD/MM/YYYY or DD-MM-YYYY
+      const brDateMatch = dateStr.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
+      // ISO format: YYYY-MM-DD
+      const isoDateMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      
+      if (brDateMatch) {
+        const [, day, month, year] = brDateMatch;
+        parsedDate = `${year}-${month}-${day}`;
+      } else if (isoDateMatch) {
+        parsedDate = dateStr;
+      }
+      
+      if (!parsedDate) {
+        parseErrors.push(`Linha ${i + 1}: Data inválida "${dateStr}". Use formato DD/MM/YYYY`);
         continue;
       }
 
@@ -142,7 +155,7 @@ export function ExportImport({ closings }: ExportImportProps) {
       }
 
       rows.push({
-        date: dateStr,
+        date: parsedDate,
         store_code: storeCode,
         expected_value: expectedValue,
         counted_value: countedValue,
