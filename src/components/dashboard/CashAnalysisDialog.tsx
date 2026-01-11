@@ -215,7 +215,7 @@ export function CashAnalysisDialog({ open, onOpenChange }: CashAnalysisDialogPro
           </Popover>
         </div>
 
-        <ScrollArea className="flex-1 overflow-auto pr-4">
+        <div className="flex-1 overflow-y-auto pr-2 scrollbar-visible">
           {isLoading ? (
             <div className="space-y-4 py-4">
               <Skeleton className="h-24" />
@@ -418,7 +418,7 @@ export function CashAnalysisDialog({ open, onOpenChange }: CashAnalysisDialogPro
               </div>
             </div>
           )}
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
