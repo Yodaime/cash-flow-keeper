@@ -154,7 +154,7 @@ export function CashAnalysisDialog({ open, onOpenChange }: CashAnalysisDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl flex items-center gap-2">
             <TrendingUp className="h-6 w-6 text-primary" />
@@ -215,7 +215,7 @@ export function CashAnalysisDialog({ open, onOpenChange }: CashAnalysisDialogPro
           </Popover>
         </div>
 
-        <ScrollArea className="flex-1 max-h-[60vh] pr-4">
+        <ScrollArea className="flex-1 overflow-auto pr-4">
           {isLoading ? (
             <div className="space-y-4 py-4">
               <Skeleton className="h-24" />
