@@ -37,6 +37,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { parseDateWithoutTimezone } from '@/lib/dateUtils';
 import { CheckCircle2, AlertTriangle, Clock, Shield, MoreHorizontal, CheckCheck } from 'lucide-react';
 import {
   DropdownMenu,
@@ -163,7 +164,7 @@ export default function Fechamentos() {
                     return (
                       <TableRow key={closing.id}>
                         <TableCell className="font-medium">
-                          {format(new Date(closing.date), "dd/MM/yyyy", { locale: ptBR })}
+                          {format(parseDateWithoutTimezone(closing.date), "dd/MM/yyyy", { locale: ptBR })}
                         </TableCell>
                         <TableCell>{closing.stores?.name || '-'}</TableCell>
                         <TableCell className="text-right font-mono">{formatCurrency(Number(closing.expected_value))}</TableCell>

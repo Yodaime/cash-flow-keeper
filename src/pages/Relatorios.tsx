@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useClosings } from '@/hooks/useClosings';
 import { useStores } from '@/hooks/useStores';
 import { cn } from '@/lib/utils';
+import { parseDateWithoutTimezone } from '@/lib/dateUtils';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -105,7 +106,7 @@ export default function Relatorios() {
     doc.text('Detalhamento', 14, finalY + 15);
 
     const tableData = filteredClosings.map((closing) => [
-      format(new Date(closing.date), 'dd/MM/yyyy'),
+      format(parseDateWithoutTimezone(closing.date), 'dd/MM/yyyy'),
       closing.stores?.name || '-',
       formatCurrency(Number(closing.expected_value)),
       formatCurrency(Number(closing.counted_value)),
@@ -232,7 +233,7 @@ export default function Relatorios() {
                   const status = statusConfig[closing.status];
                   return (
                     <TableRow key={closing.id}>
-                      <TableCell className="font-medium">{format(new Date(closing.date), "dd/MM/yyyy")}</TableCell>
+                      <TableCell className="font-medium">{format(parseDateWithoutTimezone(closing.date), "dd/MM/yyyy")}</TableCell>
                       <TableCell>{closing.stores?.name || '-'}</TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency(Number(closing.expected_value))}</TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency(Number(closing.counted_value))}</TableCell>

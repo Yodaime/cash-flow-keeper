@@ -1,20 +1,10 @@
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { parseDateWithoutTimezone } from '@/lib/dateUtils';
 import { CheckCircle2, AlertTriangle, Clock, Shield, Loader2 } from 'lucide-react';
 import { useClosings } from '@/hooks/useClosings';
-
-// Helper function to parse date string without timezone shift
-const parseDateWithoutTimezone = (dateString: string) => {
-  // If it's a full ISO string with time, use parseISO
-  if (dateString.includes('T')) {
-    return parseISO(dateString);
-  }
-  // For date-only strings (YYYY-MM-DD), parse manually to avoid UTC interpretation
-  const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day);
-};
 
 const statusConfig = {
   ok: { label: 'OK', variant: 'success' as const, icon: CheckCircle2 },
