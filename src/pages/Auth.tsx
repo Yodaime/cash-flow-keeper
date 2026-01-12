@@ -103,7 +103,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#3a2f0b] via-[#d4af37] to-[#f5e6a8] p-4">
       <Card className="w-full max-w-md border-primary/20">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-gold flex items-center justify-center shadow-gold">
@@ -112,7 +112,7 @@ const Auth = () => {
           <div>
             <CardTitle className="font-display text-3xl">CloserFlow</CardTitle>
             <CardDescription className="text-base mt-2">
-              Sistema de fechamento de caixa para joalherias
+              Sistema de fechamento de caixas
             </CardDescription>
           </div>
         </CardHeader>
