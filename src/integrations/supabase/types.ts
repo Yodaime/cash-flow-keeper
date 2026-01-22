@@ -23,6 +23,7 @@ export type Database = {
           expected_value: number
           id: string
           observations: string | null
+          organization_id: string | null
           status: Database["public"]["Enums"]["closing_status"]
           store_id: string
           updated_at: string
@@ -38,6 +39,7 @@ export type Database = {
           expected_value: number
           id?: string
           observations?: string | null
+          organization_id?: string | null
           status?: Database["public"]["Enums"]["closing_status"]
           store_id: string
           updated_at?: string
@@ -53,6 +55,7 @@ export type Database = {
           expected_value?: number
           id?: string
           observations?: string | null
+          organization_id?: string | null
           status?: Database["public"]["Enums"]["closing_status"]
           store_id?: string
           updated_at?: string
@@ -62,6 +65,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "cash_closings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cash_closings_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
@@ -70,12 +80,37 @@ export type Database = {
           },
         ]
       }
+      organizations: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
           email: string
           id: string
           name: string
+          organization_id: string | null
           store_id: string | null
           updated_at: string
         }
@@ -84,6 +119,7 @@ export type Database = {
           email: string
           id: string
           name: string
+          organization_id?: string | null
           store_id?: string | null
           updated_at?: string
         }
@@ -92,10 +128,18 @@ export type Database = {
           email?: string
           id?: string
           name?: string
+          organization_id?: string | null
           store_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_store_id_fkey"
             columns: ["store_id"]
@@ -111,6 +155,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          organization_id: string | null
           unit: string | null
           updated_at: string
         }
@@ -119,6 +164,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          organization_id?: string | null
           unit?: string | null
           updated_at?: string
         }
@@ -127,10 +173,19 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          organization_id?: string | null
           unit?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stores_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
