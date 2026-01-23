@@ -1,4 +1,12 @@
-export type UserRole = 'funcionaria' | 'gerente' | 'administrador';
+export type UserRole = 'funcionaria' | 'gerente' | 'administrador' | 'super_admin';
+
+export interface Organization {
+  id: string;
+  name: string;
+  code: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export type ClosingStatus = 'ok' | 'atencao' | 'pendente' | 'aprovado';
 

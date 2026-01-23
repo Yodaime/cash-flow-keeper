@@ -8,9 +8,11 @@ export interface Profile {
   name: string;
   email: string;
   store_id: string | null;
+  organization_id: string | null;
   created_at: string;
   updated_at: string;
   stores?: { name: string } | null;
+  organizations?: { name: string } | null;
   user_roles?: { role: UserRole }[];
 }
 
@@ -24,7 +26,8 @@ export const useUsers = () => {
           .from('profiles')
           .select(`
             *,
-            stores (name)
+            stores (name),
+            organizations (name)
           `)
           .order('name'),
         supabase
@@ -125,6 +128,31 @@ export const useUpdateUserStore = () => {
     },
     onError: (error: any) => {
       toast.error(`Erro ao atualizar loja do usuário: ${error.message}`);
+    },
+  });
+};
+
+export const useUpdateUserOrganization = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ userId, organizationId }: { userId: string; organizationId: string | null }) => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ organization_id: organizationId })
+        .eq('id', userId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success('Organização do usuário atualizada com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao atualizar organização do usuário: ${error.message}`);
     },
   });
 };

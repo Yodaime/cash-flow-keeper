@@ -11,6 +11,7 @@ import Fechamentos from "./pages/Fechamentos";
 import Lojas from "./pages/Lojas";
 import Usuarios from "./pages/Usuarios";
 import Relatorios from "./pages/Relatorios";
+import Organizacoes from "./pages/Organizacoes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/lojas" element={<ProtectedRoute><Lojas /></ProtectedRoute>} />
             <Route path="/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
             <Route path="/relatorios" element={<ProtectedRoute><Relatorios /></ProtectedRoute>} />
+            <Route path="/organizacoes" element={<ProtectedRoute><Organizacoes /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

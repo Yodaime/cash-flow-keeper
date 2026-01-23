@@ -7,6 +7,7 @@ export interface CashClosing {
   id: string;
   store_id: string;
   user_id: string;
+  organization_id: string | null;
   date: string;
   expected_value: number;
   counted_value: number;
@@ -18,7 +19,6 @@ export interface CashClosing {
   created_at: string;
   updated_at: string;
   stores?: { name: string; code: string } | null;
-  
 }
 
 const TOLERANCE_LIMIT = 10;
@@ -73,6 +73,13 @@ export const useCreateClosing = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
+      // Get user profile to get organization_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', user.id)
+        .single();
+
       const difference = closing.counted_value - closing.expected_value;
       const status: ClosingStatus = Math.abs(difference) <= TOLERANCE_LIMIT ? 'ok' : 'atencao';
       
@@ -81,6 +88,7 @@ export const useCreateClosing = () => {
         .insert({
           ...closing,
           user_id: user.id,
+          organization_id: profile?.organization_id,
           difference,
           status,
         })
