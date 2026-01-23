@@ -7,6 +7,7 @@ export interface Store {
   name: string;
   code: string;
   unit: string | null;
+  organization_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -32,10 +33,24 @@ export const useCreateStore = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (store: { name: string; code: string; unit?: string }) => {
+    mutationFn: async (store: { name: string; code: string; unit?: string; organization_id?: string }) => {
+      // Get current user to get organization_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+      
+      // Get user profile to get organization_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', user.id)
+        .single();
+      
       const { data, error } = await supabase
         .from('stores')
-        .insert(store)
+        .insert({
+          ...store,
+          organization_id: store.organization_id || profile?.organization_id,
+        })
         .select()
         .single();
       

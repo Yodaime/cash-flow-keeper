@@ -12,16 +12,18 @@ import { DeleteUserDialog } from '@/components/users/DeleteUserDialog';
 import { User, Shield, Users as UsersIcon, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { UserRole } from '@/types';
 
-const roleConfig: Record<UserRole, { label: string; variant: 'secondary' | 'gold' | 'default' }> = {
+const roleConfig: Record<UserRole, { label: string; variant: 'secondary' | 'gold' | 'default' | 'destructive' }> = {
   funcionaria: { label: 'Funcionária', variant: 'secondary' },
   gerente: { label: 'Gerente', variant: 'gold' },
   administrador: { label: 'Administrador', variant: 'default' },
+  super_admin: { label: 'Super Admin', variant: 'destructive' },
 };
 
 export default function Usuarios() {
   const { data: users, isLoading } = useUsers();
   const { role: currentUserRole } = useAuth();
-  const isAdmin = currentUserRole === 'administrador';
+  const isAdmin = currentUserRole === 'administrador' || currentUserRole === 'super_admin';
+  const isSuperAdmin = currentUserRole === 'super_admin';
 
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [deletingUser, setDeletingUser] = useState<Profile | null>(null);

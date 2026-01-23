@@ -22,10 +22,15 @@ const navigation = [
   { name: 'Relatórios', href: '/relatorios', icon: FileText },
 ];
 
+const superAdminNavigation = [
+  { name: 'Organizações', href: '/organizacoes', icon: Store },
+];
+
 const roleLabels = {
   funcionaria: 'Funcionária',
   gerente: 'Gerente',
   administrador: 'Administrador',
+  super_admin: 'Super Admin',
 };
 
 export function Sidebar() {
@@ -33,6 +38,8 @@ export function Sidebar() {
   const { collapsed, setCollapsed } = useLayout();
   const { profile, role, signOut } = useAuth();
 
+  const isSuperAdmin = role === 'super_admin';
+  
   const initials = profile?.name
     ? profile.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     : '??';
@@ -92,6 +99,37 @@ export function Sidebar() {
               </NavLink>
             );
           })}
+          
+          {/* Super Admin Only */}
+          {isSuperAdmin && (
+            <>
+              {!collapsed && (
+                <div className="pt-4 pb-2">
+                  <p className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
+                    Super Admin
+                  </p>
+                </div>
+              )}
+              {superAdminNavigation.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <NavLink
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                      isActive
+                        ? "bg-destructive/20 text-destructive"
+                        : "text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive"
+                    )}
+                  >
+                    <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-destructive")} />
+                    {!collapsed && <span>{item.name}</span>}
+                  </NavLink>
+                );
+              })}
+            </>
+          )}
         </nav>
 
         {/* User Section */}

@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useStores } from '@/hooks/useStores';
-import { useUpdateUserProfile, useUpdateUserRole, useUpdateUserStore, useResetUserPassword } from '@/hooks/useUsers';
+import { useOrganizations } from '@/hooks/useOrganizations';
+import { useUpdateUserProfile, useUpdateUserRole, useUpdateUserStore, useUpdateUserOrganization, useResetUserPassword } from '@/hooks/useUsers';
+import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types';
 import { Profile } from '@/hooks/useUsers';
 import { Loader2, KeyRound } from 'lucide-react';
@@ -23,16 +25,29 @@ const roleOptions: { value: UserRole; label: string }[] = [
   { value: 'administrador', label: 'Administrador' },
 ];
 
+const superAdminRoleOptions: { value: UserRole; label: string }[] = [
+  { value: 'funcionaria', label: 'Funcionária' },
+  { value: 'gerente', label: 'Gerente' },
+  { value: 'administrador', label: 'Administrador' },
+  { value: 'super_admin', label: 'Super Admin' },
+];
+
 export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
+  const { role: currentUserRole } = useAuth();
+  const isSuperAdmin = currentUserRole === 'super_admin';
+  
   const { data: stores } = useStores();
+  const { data: organizations } = useOrganizations();
   const updateProfile = useUpdateUserProfile();
   const updateRole = useUpdateUserRole();
   const updateStore = useUpdateUserStore();
+  const updateOrganization = useUpdateUserOrganization();
   const resetPassword = useResetUserPassword();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [storeId, setStoreId] = useState<string>('none');
+  const [organizationId, setOrganizationId] = useState<string>('none');
   const [role, setRole] = useState<UserRole>('funcionaria');
   const [newPassword, setNewPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,6 +58,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
       setName(user.name);
       setEmail(user.email);
       setStoreId(user.store_id || 'none');
+      setOrganizationId(user.organization_id || 'none');
       setRole(user.user_roles?.[0]?.role || 'funcionaria');
       setNewPassword('');
     }
@@ -99,6 +115,18 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
         storeId: storeId === 'none' ? null : storeId,
       });
 
+      // Update organization (only for super_admin)
+      if (isSuperAdmin) {
+        const currentOrgId = user.organization_id;
+        const newOrgId = organizationId === 'none' ? null : organizationId;
+        if (currentOrgId !== newOrgId) {
+          await updateOrganization.mutateAsync({
+            userId: user.id,
+            organizationId: newOrgId,
+          });
+        }
+      }
+
       // Update role
       const currentRole = user.user_roles?.[0]?.role;
       if (currentRole !== role) {
@@ -115,6 +143,8 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
       setIsSubmitting(false);
     }
   };
+
+  const availableRoleOptions = isSuperAdmin ? superAdminRoleOptions : roleOptions;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -171,6 +201,26 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
             </div>
           </div>
 
+          {/* Organization - Only for Super Admin */}
+          {isSuperAdmin && (
+            <div className="space-y-2">
+              <Label htmlFor="organization">Organização</Label>
+              <Select value={organizationId} onValueChange={setOrganizationId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma organização" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhuma organização</SelectItem>
+                  {organizations?.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.name} ({org.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="store">Loja</Label>
             <Select value={storeId} onValueChange={setStoreId}>
@@ -195,7 +245,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                 <SelectValue placeholder="Selecione a função" />
               </SelectTrigger>
               <SelectContent>
-                {roleOptions.map((option) => (
+                {availableRoleOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>

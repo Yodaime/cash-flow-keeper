@@ -8,6 +8,7 @@ interface UserProfile {
   name: string;
   email: string;
   store_id: string | null;
+  organization_id: string | null;
 }
 
 interface AuthContextType {
@@ -53,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const [profileResult, roleResult] = await Promise.all([
         supabase
           .from('profiles')
-          .select('id, name, email, store_id')
+          .select('id, name, email, store_id, organization_id')
           .eq('id', userId)
           .maybeSingle(),
         supabase
