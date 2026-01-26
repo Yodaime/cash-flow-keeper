@@ -36,7 +36,7 @@ export default function Lojas() {
   const isAdmin = currentUserRole === 'administrador' || isSuperAdmin;
   const isGerente = currentUserRole === 'gerente';
   const canCreateEdit = isAdmin || isGerente;
-  const canDelete = isAdmin;
+  const canDelete = isAdmin || isGerente;
 
   const resetForm = () => {
     setName(''); setCode(''); setUnit('');
