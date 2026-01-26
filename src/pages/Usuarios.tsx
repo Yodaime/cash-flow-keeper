@@ -22,8 +22,10 @@ const roleConfig: Record<UserRole, { label: string; variant: 'secondary' | 'gold
 export default function Usuarios() {
   const { data: users, isLoading } = useUsers();
   const { role: currentUserRole } = useAuth();
-  const isAdmin = currentUserRole === 'administrador' || currentUserRole === 'super_admin';
   const isSuperAdmin = currentUserRole === 'super_admin';
+  const isAdmin = currentUserRole === 'administrador' || isSuperAdmin;
+  const isGerente = currentUserRole === 'gerente';
+  const canManageUsers = isAdmin || isGerente;
 
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [deletingUser, setDeletingUser] = useState<Profile | null>(null);
@@ -92,15 +94,21 @@ export default function Usuarios() {
                   <TableHead>Usuário</TableHead>
                   <TableHead>Função</TableHead>
                   <TableHead>Loja</TableHead>
-                  {isAdmin && <TableHead className="w-12"></TableHead>}
+                  {canManageUsers && <TableHead className="w-12"></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users?.length === 0 ? (
-                  <TableRow><TableCell colSpan={isAdmin ? 4 : 3} className="text-center py-8 text-muted-foreground">Nenhum usuário cadastrado.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={canManageUsers ? 4 : 3} className="text-center py-8 text-muted-foreground">Nenhum usuário cadastrado.</TableCell></TableRow>
                 ) : users?.map((user) => {
                   const userRole = user.user_roles?.[0]?.role as UserRole | undefined;
                   const roleInfo = userRole ? roleConfig[userRole] : null;
+                  
+                  // Gerente não pode editar/excluir administradores
+                  const targetIsAdmin = userRole === 'administrador' || userRole === 'super_admin';
+                  const canEditThisUser = isAdmin || (isGerente && !targetIsAdmin);
+                  const canDeleteThisUser = isAdmin; // Apenas admins podem excluir
+                  
                   return (
                     <TableRow key={user.id}>
                       <TableCell>
@@ -116,28 +124,34 @@ export default function Usuarios() {
                       </TableCell>
                       <TableCell>{roleInfo && <Badge variant={roleInfo.variant}>{roleInfo.label}</Badge>}</TableCell>
                       <TableCell className="text-muted-foreground">{user.stores?.name || '-'}</TableCell>
-                      {isAdmin && (
+                      {canManageUsers && (
                         <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEdit(user)}>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleDelete(user)}
-                                className="text-destructive focus:text-destructive"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Remover
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          {(canEditThisUser || canDeleteThisUser) && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {canEditThisUser && (
+                                  <DropdownMenuItem onClick={() => handleEdit(user)}>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Editar
+                                  </DropdownMenuItem>
+                                )}
+                                {canDeleteThisUser && (
+                                  <DropdownMenuItem 
+                                    onClick={() => handleDelete(user)}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Remover
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </TableCell>
                       )}
                     </TableRow>

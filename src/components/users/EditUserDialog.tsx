@@ -35,6 +35,7 @@ const superAdminRoleOptions: { value: UserRole; label: string }[] = [
 export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
   const { role: currentUserRole } = useAuth();
   const isSuperAdmin = currentUserRole === 'super_admin';
+  const isAdmin = currentUserRole === 'administrador' || isSuperAdmin;
   
   const { data: stores } = useStores();
   const { data: organizations } = useOrganizations();
@@ -144,7 +145,13 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
     }
   };
 
-  const availableRoleOptions = isSuperAdmin ? superAdminRoleOptions : roleOptions;
+  // Gerente só pode atribuir funcionaria ou gerente
+  const gerenteRoleOptions = roleOptions.filter(r => r.value !== 'administrador');
+  const availableRoleOptions = isSuperAdmin 
+    ? superAdminRoleOptions 
+    : isAdmin 
+      ? roleOptions 
+      : gerenteRoleOptions;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -210,6 +210,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_profile: {
+        Args: { _manager_id: string; _target_profile_id: string }
+        Returns: boolean
+      }
+      can_manage_user_role: {
+        Args: { _manager_id: string; _target_user_id: string }
+        Returns: boolean
+      }
       get_user_organization_id: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
