@@ -16,6 +16,41 @@ export interface Profile {
   user_roles?: { role: UserRole }[];
 }
 
+export const useCreateUser = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (userData: {
+      name: string;
+      email: string;
+      password: string;
+      role: UserRole;
+      storeId?: string;
+    }) => {
+      const response = await supabase.functions.invoke('create-user', {
+        body: userData,
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao criar usuário');
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success('Usuário criado com sucesso!');
+    },
+    onError: (error: Error) => {
+      toast.error(`Erro ao criar usuário: ${error.message}`);
+    },
+  });
+};
+
 export const useUsers = () => {
   return useQuery({
     queryKey: ['users'],

@@ -9,7 +9,8 @@ import { useUsers, Profile } from '@/hooks/useUsers';
 import { useAuth } from '@/hooks/useAuth';
 import { EditUserDialog } from '@/components/users/EditUserDialog';
 import { DeleteUserDialog } from '@/components/users/DeleteUserDialog';
-import { User, Shield, Users as UsersIcon, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { CreateUserDialog } from '@/components/users/CreateUserDialog';
+import { User, Shield, Users as UsersIcon, MoreHorizontal, Pencil, Trash2, Plus } from 'lucide-react';
 import { UserRole } from '@/types';
 
 const roleConfig: Record<UserRole, { label: string; variant: 'secondary' | 'gold' | 'default' | 'destructive' }> = {
@@ -26,11 +27,13 @@ export default function Usuarios() {
   const isAdmin = currentUserRole === 'administrador' || isSuperAdmin;
   const isGerente = currentUserRole === 'gerente';
   const canManageUsers = isAdmin || isGerente;
+  const canCreateUsers = isAdmin; // Only admins can create users
 
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [deletingUser, setDeletingUser] = useState<Profile | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const handleEdit = (user: Profile) => {
     setEditingUser(user);
@@ -45,9 +48,17 @@ export default function Usuarios() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Usuários</h1>
-          <p className="text-muted-foreground mt-1">Gerencie os usuários e permissões</p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-display text-3xl font-bold tracking-tight">Usuários</h1>
+            <p className="text-muted-foreground mt-1">Gerencie os usuários e permissões</p>
+          </div>
+          {canCreateUsers && (
+            <Button variant="gold" className="gap-2" onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Novo Usuário
+            </Button>
+          )}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
@@ -173,6 +184,11 @@ export default function Usuarios() {
         user={deletingUser}
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
+      />
+
+      <CreateUserDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
       />
     </Layout>
   );
