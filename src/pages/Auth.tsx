@@ -10,23 +10,25 @@ import { Loader2, Gem } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import { useCreateAccountRequest } from '@/hooks/useAccountRequests';
+
 const emailSchema = z.string().email('Email inválido');
 const passwordSchema = z.string().min(6, 'Senha deve ter no mínimo 6 caracteres');
 const nameSchema = z.string().min(2, 'Nome deve ter no mínimo 2 caracteres');
 
 const Auth = () => {
-  const { user, loading, signIn, signUp } = useAuth();
+  const { user, loading, signIn } = useAuth();
+  const createAccountRequest = useCreateAccountRequest();
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('login');
   
   // Login state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   
-  // Signup state
-  const [signupName, setSignupName] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
+  // Account request state
+  const [requestName, setRequestName] = useState('');
+  const [requestEmail, setRequestEmail] = useState('');
 
   if (loading) {
     return (
@@ -68,13 +70,12 @@ const Auth = () => {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleAccountRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      nameSchema.parse(signupName);
-      emailSchema.parse(signupEmail);
-      passwordSchema.parse(signupPassword);
+      nameSchema.parse(requestName);
+      emailSchema.parse(requestEmail);
     } catch (err) {
       if (err instanceof z.ZodError) {
         toast.error(err.errors[0].message);
@@ -82,23 +83,17 @@ const Auth = () => {
       }
     }
     
-    if (signupPassword !== signupConfirmPassword) {
-      toast.error('As senhas não coincidem');
-      return;
-    }
-    
     setIsLoading(true);
-    const { error } = await signUp(signupEmail, signupPassword, signupName);
-    setIsLoading(false);
-    
-    if (error) {
-      if (error.message.includes('already registered')) {
-        toast.error('Este email já está cadastrado');
-      } else {
-        toast.error(error.message);
-      }
-    } else {
-      toast.success('Conta criada com sucesso!');
+    try {
+      await createAccountRequest.mutateAsync({ name: requestName, email: requestEmail });
+      toast.success('Dados enviados com sucesso! Logo sua conta será criada.');
+      setRequestName('');
+      setRequestEmail('');
+      setActiveTab('login');
+    } catch {
+      // Error is already handled by the mutation
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -117,7 +112,7 @@ const Auth = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Entrar</TabsTrigger>
               <TabsTrigger value="signup">Criar Conta</TabsTrigger>
@@ -161,48 +156,26 @@ const Auth = () => {
             </TabsContent>
             
             <TabsContent value="signup" className="space-y-4 mt-6">
-              <form onSubmit={handleSignup} className="space-y-4">
+              <form onSubmit={handleAccountRequest} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name">Nome</Label>
+                  <Label htmlFor="request-name">Nome</Label>
                   <Input
-                    id="signup-name"
+                    id="request-name"
                     type="text"
                     placeholder="Seu nome completo"
-                    value={signupName}
-                    onChange={(e) => setSignupName(e.target.value)}
+                    value={requestName}
+                    onChange={(e) => setRequestName(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="request-email">Email</Label>
                   <Input
-                    id="signup-email"
+                    id="request-email"
                     type="email"
                     placeholder="seu@email.com"
-                    value={signupEmail}
-                    onChange={(e) => setSignupEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Senha</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="Mínimo 6 caracteres"
-                    value={signupPassword}
-                    onChange={(e) => setSignupPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-confirm-password">Confirmar Senha</Label>
-                  <Input
-                    id="signup-confirm-password"
-                    type="password"
-                    placeholder="Confirme sua senha"
-                    value={signupConfirmPassword}
-                    onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                    value={requestEmail}
+                    onChange={(e) => setRequestEmail(e.target.value)}
                     required
                   />
                 </div>
@@ -210,10 +183,10 @@ const Auth = () => {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Criando conta...
+                      Enviando...
                     </>
                   ) : (
-                    'Criar Conta'
+                    'Solicitar Conta'
                   )}
                 </Button>
               </form>

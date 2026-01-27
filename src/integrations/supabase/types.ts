@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_requests: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       cash_closings: {
         Row: {
           counted_value: number

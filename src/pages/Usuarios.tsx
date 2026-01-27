@@ -6,11 +6,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useUsers, Profile } from '@/hooks/useUsers';
+import { usePendingRequestsCount } from '@/hooks/useAccountRequests';
 import { useAuth } from '@/hooks/useAuth';
 import { EditUserDialog } from '@/components/users/EditUserDialog';
 import { DeleteUserDialog } from '@/components/users/DeleteUserDialog';
 import { CreateUserDialog } from '@/components/users/CreateUserDialog';
-import { User, Shield, Users as UsersIcon, MoreHorizontal, Pencil, Trash2, Plus } from 'lucide-react';
+import { AccountRequestsDialog } from '@/components/users/AccountRequestsDialog';
+import { User, Shield, Users as UsersIcon, MoreHorizontal, Pencil, Trash2, Plus, Bell } from 'lucide-react';
 import { UserRole } from '@/types';
 
 const roleConfig: Record<UserRole, { label: string; variant: 'secondary' | 'gold' | 'default' | 'destructive' }> = {
@@ -22,6 +24,7 @@ const roleConfig: Record<UserRole, { label: string; variant: 'secondary' | 'gold
 
 export default function Usuarios() {
   const { data: users, isLoading } = useUsers();
+  const { data: pendingCount = 0 } = usePendingRequestsCount();
   const { role: currentUserRole } = useAuth();
   const isSuperAdmin = currentUserRole === 'super_admin';
   const isAdmin = currentUserRole === 'administrador' || isSuperAdmin;
@@ -34,6 +37,7 @@ export default function Usuarios() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [requestsDialogOpen, setRequestsDialogOpen] = useState(false);
 
   const handleEdit = (user: Profile) => {
     setEditingUser(user);
@@ -54,10 +58,25 @@ export default function Usuarios() {
             <p className="text-muted-foreground mt-1">Gerencie os usuários e permissões</p>
           </div>
           {canCreateUsers && (
-            <Button variant="gold" className="gap-2" onClick={() => setCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4" />
-              Novo Usuário
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                className="gap-2 relative" 
+                onClick={() => setRequestsDialogOpen(true)}
+              >
+                <Bell className="h-4 w-4" />
+                Solicitações
+                {pendingCount > 0 && (
+                  <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
+                    {pendingCount}
+                  </span>
+                )}
+              </Button>
+              <Button variant="gold" className="gap-2" onClick={() => setCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4" />
+                Novo Usuário
+              </Button>
+            </div>
           )}
         </div>
 
@@ -189,6 +208,11 @@ export default function Usuarios() {
       <CreateUserDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+      />
+
+      <AccountRequestsDialog
+        open={requestsDialogOpen}
+        onOpenChange={setRequestsDialogOpen}
       />
     </Layout>
   );
