@@ -68,7 +68,8 @@ export default function Fechamentos() {
   const updateStatus = useUpdateClosingStatus();
   const { role } = useAuth();
   
-  const isAdmin = role === 'administrador';
+  const isSuperAdmin = role === 'super_admin';
+  const isAdmin = role === 'administrador' || isSuperAdmin;
 
   const filteredClosings = (closings || []).filter(closing => {
     if (statusFilter !== 'all' && closing.status !== statusFilter) return false;
