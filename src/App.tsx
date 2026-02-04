@@ -11,6 +11,7 @@ import Fechamentos from "./pages/Fechamentos";
 import Lojas from "./pages/Lojas";
 import Usuarios from "./pages/Usuarios";
 import Relatorios from "./pages/Relatorios";
+import Estoque from "./pages/Estoque";
 import Organizacoes from "./pages/Organizacoes";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/lojas" element={<ProtectedRoute><Lojas /></ProtectedRoute>} />
             <Route path="/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
             <Route path="/relatorios" element={<ProtectedRoute><Relatorios /></ProtectedRoute>} />
+            <Route path="/estoque" element={<ProtectedRoute><Estoque /></ProtectedRoute>} />
             <Route path="/organizacoes" element={<ProtectedRoute><Organizacoes /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
