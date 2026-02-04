@@ -101,6 +101,11 @@ export default function Estoque() {
           return;
         }
 
+        if (!stores || stores.length === 0) {
+          toast.error('Nenhuma loja cadastrada! Cadastre lojas antes de importar produtos.');
+          return;
+        }
+
         const dataLines = lines.slice(1);
         const productsToImport: Array<{
           name: string;
@@ -110,16 +115,33 @@ export default function Estoque() {
           unit_value: number;
         }> = [];
 
+        const errors: string[] = [];
+
         for (const line of dataLines) {
-          const columns = line.split(';').map(col => col.trim().replace(/"/g, ''));
+          // Suporte para separadores ; e ,
+          const separator = line.includes(';') ? ';' : ',';
+          const columns = line.split(separator).map(col => col.trim().replace(/"/g, ''));
           
-          if (columns.length < 5) continue;
+          if (columns.length < 5) {
+            errors.push(`Linha ignorada (colunas insuficientes): ${line.substring(0, 50)}...`);
+            continue;
+          }
 
           const [name, type, storeCode, quantity, unitValue] = columns;
           
-          const store = stores?.find(s => s.code === storeCode);
+          if (!name || !type || !storeCode) {
+            errors.push(`Linha ignorada (dados obrigatórios vazios): ${name || 'sem nome'}`);
+            continue;
+          }
+          
+          // Busca loja por código ou nome (mais flexível)
+          const store = stores?.find(s => 
+            s.code.toLowerCase() === storeCode.toLowerCase() || 
+            s.name.toLowerCase() === storeCode.toLowerCase()
+          );
+          
           if (!store) {
-            toast.error(`Loja com código "${storeCode}" não encontrada!`);
+            errors.push(`Loja "${storeCode}" não encontrada`);
             continue;
           }
 
@@ -127,14 +149,23 @@ export default function Estoque() {
             name,
             type,
             store_id: store.id,
-            quantity: parseInt(quantity) || 0,
-            unit_value: parseFloat(unitValue.replace(',', '.')) || 0,
+            quantity: parseInt(quantity.replace(/\D/g, '')) || 0,
+            unit_value: parseFloat(unitValue.replace(',', '.').replace(/[^\d.]/g, '')) || 0,
           });
         }
 
-        if (productsToImport.length === 0) {
-          toast.error('Nenhum produto válido para importar!');
+        if (errors.length > 0 && productsToImport.length === 0) {
+          toast.error(`Nenhum produto válido. Erros: ${errors.slice(0, 3).join('; ')}`);
           return;
+        }
+
+        if (productsToImport.length === 0) {
+          toast.error('Nenhum produto válido para importar! Verifique se o código da loja está correto.');
+          return;
+        }
+
+        if (errors.length > 0) {
+          toast.warning(`${errors.length} linha(s) ignorada(s)`);
         }
 
         await bulkCreate.mutateAsync(productsToImport);
