@@ -5,6 +5,7 @@ import {
   Store, 
   Users, 
   FileText,
+  Package,
   LogOut,
   ChevronLeft,
   ChevronRight
@@ -20,7 +21,15 @@ const navigation = [
   { name: 'Lojas', href: '/lojas', icon: Store },
   { name: 'Usuários', href: '/usuarios', icon: Users },
   { name: 'Relatórios', href: '/relatorios', icon: FileText },
+  { name: 'Estoque', href: '/estoque', icon: Package, adminOnly: true },
 ];
+
+type NavItem = {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  adminOnly?: boolean;
+};
 
 const superAdminNavigation = [
   { name: 'Organizações', href: '/organizacoes', icon: Store },
@@ -39,6 +48,11 @@ export function Sidebar() {
   const { profile, role, signOut } = useAuth();
 
   const isSuperAdmin = role === 'super_admin';
+  const isAdmin = role === 'administrador' || role === 'super_admin';
+
+  const visibleNavigation = navigation.filter((item: NavItem) => 
+    !item.adminOnly || isAdmin
+  );
   
   const initials = profile?.name
     ? profile.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
@@ -81,7 +95,7 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 px-3 py-4">
-          {navigation.map((item) => {
+          {visibleNavigation.map((item: NavItem) => {
             const isActive = location.pathname === item.href;
             return (
               <NavLink
