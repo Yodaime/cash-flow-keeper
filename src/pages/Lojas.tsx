@@ -11,8 +11,12 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useStores, useCreateStore, useUpdateStore, useDeleteStore, Store as StoreType } from '@/hooks/useStores';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -25,8 +29,10 @@ export default function Lojas() {
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [unit, setUnit] = useState('');
+  const [organizationId, setOrganizationId] = useState<string>('');
 
   const { data: stores, isLoading } = useStores();
+  const { data: organizations } = useOrganizations();
   const { role: currentUserRole } = useAuth();
   const createStore = useCreateStore();
   const updateStore = useUpdateStore();
@@ -39,7 +45,7 @@ export default function Lojas() {
   const canDelete = isAdmin || isGerente;
 
   const resetForm = () => {
-    setName(''); setCode(''); setUnit('');
+    setName(''); setCode(''); setUnit(''); setOrganizationId('');
     setEditingStore(null);
   };
 
@@ -48,6 +54,7 @@ export default function Lojas() {
     setName(store.name);
     setCode(store.code);
     setUnit(store.unit || '');
+    setOrganizationId(store.organization_id || '');
     setIsDialogOpen(true);
   };
 
@@ -62,7 +69,12 @@ export default function Lojas() {
       if (editingStore) {
         await updateStore.mutateAsync({ id: editingStore.id, name, code, unit: unit || undefined });
       } else {
-        await createStore.mutateAsync({ name, code, unit: unit || undefined });
+        await createStore.mutateAsync({ 
+          name, 
+          code, 
+          unit: unit || undefined,
+          organization_id: isSuperAdmin && organizationId ? organizationId : undefined
+        });
       }
       resetForm();
       setIsDialogOpen(false);
@@ -99,6 +111,24 @@ export default function Lojas() {
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Organization selector - Only for Super Admin */}
+                  {isSuperAdmin && (
+                    <div className="space-y-2">
+                      <Label htmlFor="organization">Organização</Label>
+                      <Select value={organizationId} onValueChange={setOrganizationId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma organização" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {organizations?.map((org) => (
+                            <SelectItem key={org.id} value={org.id}>
+                              {org.name} ({org.code})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="name">Nome da Loja</Label>
                     <Input id="name" placeholder="Ex: Joalheria Centro" value={name} onChange={(e) => setName(e.target.value)} />
