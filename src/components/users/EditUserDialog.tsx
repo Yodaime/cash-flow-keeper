@@ -212,7 +212,14 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
           {isSuperAdmin && (
             <div className="space-y-2">
               <Label htmlFor="organization">Organização</Label>
-              <Select value={organizationId} onValueChange={setOrganizationId}>
+              <Select 
+                value={organizationId} 
+                onValueChange={(value) => {
+                  setOrganizationId(value);
+                  // Reset store when organization changes
+                  setStoreId('none');
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma organização" />
                 </SelectTrigger>
@@ -236,11 +243,17 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Nenhuma loja</SelectItem>
-                {stores?.map((store) => (
-                  <SelectItem key={store.id} value={store.id}>
-                    {store.name}
-                  </SelectItem>
-                ))}
+                {stores
+                  ?.filter((store) => {
+                    // Filtra lojas pela organização selecionada
+                    const selectedOrgId = organizationId === 'none' ? null : organizationId;
+                    return store.organization_id === selectedOrgId;
+                  })
+                  .map((store) => (
+                    <SelectItem key={store.id} value={store.id}>
+                      {store.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
