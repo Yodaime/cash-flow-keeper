@@ -58,13 +58,17 @@ export default function Lojas() {
       return;
     }
     
-    if (editingStore) {
-      await updateStore.mutateAsync({ id: editingStore.id, name, code, unit: unit || undefined });
-    } else {
-      await createStore.mutateAsync({ name, code, unit: unit || undefined });
+    try {
+      if (editingStore) {
+        await updateStore.mutateAsync({ id: editingStore.id, name, code, unit: unit || undefined });
+      } else {
+        await createStore.mutateAsync({ name, code, unit: unit || undefined });
+      }
+      resetForm();
+      setIsDialogOpen(false);
+    } catch (error) {
+      // Error already handled by mutation
     }
-    resetForm();
-    setIsDialogOpen(false);
   };
 
   const handleDialogChange = (open: boolean) => {
