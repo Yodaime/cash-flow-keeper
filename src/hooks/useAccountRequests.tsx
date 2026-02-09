@@ -83,6 +83,28 @@ export const useUpdateAccountRequest = () => {
   });
 };
 
+export const useDeleteAccountRequest = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('account_requests')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account-requests'] });
+      toast.success('Solicitação excluída com sucesso!');
+    },
+    onError: (error: Error) => {
+      toast.error(`Erro ao excluir solicitação: ${error.message}`);
+    },
+  });
+};
+
 export const useCreateAccountRequest = () => {
   return useMutation({
     mutationFn: async ({
