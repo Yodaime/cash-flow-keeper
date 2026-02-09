@@ -40,6 +40,7 @@ export default function Relatorios() {
   });
 
   const filteredClosings = closings || [];
+  const totalInitial = filteredClosings.reduce((acc, c) => acc + Number(c.initial_value || 0), 0);
   const totalExpected = filteredClosings.reduce((acc, c) => acc + Number(c.expected_value), 0);
   const totalCounted = filteredClosings.reduce((acc, c) => acc + Number(c.counted_value), 0);
   const totalDifference = totalCounted - totalExpected;
@@ -81,6 +82,7 @@ export default function Relatorios() {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     const summaryData = [
+      ['Valor Inicial Total', formatCurrency(totalInitial)],
       ['Total Esperado', formatCurrency(totalExpected)],
       ['Total Contado', formatCurrency(totalCounted)],
       ['Diferença Total', formatCurrency(totalDifference)],
@@ -108,6 +110,7 @@ export default function Relatorios() {
     const tableData = filteredClosings.map((closing) => [
       format(parseDateWithoutTimezone(closing.date), 'dd/MM/yyyy'),
       closing.stores?.name || '-',
+      formatCurrency(Number(closing.initial_value || 0)),
       formatCurrency(Number(closing.expected_value)),
       formatCurrency(Number(closing.counted_value)),
       formatCurrency(Number(closing.difference)),
@@ -116,18 +119,19 @@ export default function Relatorios() {
 
     autoTable(doc, {
       startY: finalY + 20,
-      head: [['Data', 'Loja', 'Esperado', 'Contado', 'Diferença', 'Status']],
+      head: [['Data', 'Loja', 'V. Inicial', 'Esperado', 'Contado', 'Diferença', 'Status']],
       body: tableData,
       theme: 'striped',
       styles: { fontSize: 9, cellPadding: 3 },
       headStyles: { fillColor: [45, 45, 45], textColor: 255, fontStyle: 'bold' },
       columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 30, halign: 'right' },
-        3: { cellWidth: 30, halign: 'right' },
-        4: { cellWidth: 30, halign: 'right' },
-        5: { cellWidth: 25, halign: 'center' },
+        0: { cellWidth: 22 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 25, halign: 'right' },
+        3: { cellWidth: 25, halign: 'right' },
+        4: { cellWidth: 25, halign: 'right' },
+        5: { cellWidth: 25, halign: 'right' },
+        6: { cellWidth: 22, halign: 'center' },
       },
     });
 
@@ -222,19 +226,20 @@ export default function Relatorios() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead>Data</TableHead><TableHead>Loja</TableHead><TableHead className="text-right">Esperado</TableHead>
+                  <TableHead>Data</TableHead><TableHead>Loja</TableHead><TableHead className="text-right">V. Inicial</TableHead><TableHead className="text-right">Esperado</TableHead>
                   <TableHead className="text-right">Contado</TableHead><TableHead className="text-right">Diferença</TableHead><TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredClosings.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum fechamento encontrado.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum fechamento encontrado.</TableCell></TableRow>
                 ) : filteredClosings.map((closing) => {
                   const status = statusConfig[closing.status];
                   return (
                     <TableRow key={closing.id}>
                       <TableCell className="font-medium">{format(parseDateWithoutTimezone(closing.date), "dd/MM/yyyy")}</TableCell>
                       <TableCell>{closing.stores?.name || '-'}</TableCell>
+                      <TableCell className="text-right font-mono">{formatCurrency(Number(closing.initial_value || 0))}</TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency(Number(closing.expected_value))}</TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency(Number(closing.counted_value))}</TableCell>
                       <TableCell className={cn("text-right font-mono font-medium", Number(closing.difference) > 0 && "text-success", Number(closing.difference) < 0 && "text-destructive")}>{Number(closing.difference) >= 0 ? '+' : ''}{formatCurrency(Number(closing.difference))}</TableCell>

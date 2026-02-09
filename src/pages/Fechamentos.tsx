@@ -144,6 +144,7 @@ export default function Fechamentos() {
                 <TableRow className="bg-muted/50">
                   <TableHead>Data</TableHead>
                   <TableHead>Loja</TableHead>
+                  <TableHead className="text-right">Valor Inicial</TableHead>
                   <TableHead className="text-right">Esperado</TableHead>
                   <TableHead className="text-right">Contado</TableHead>
                   <TableHead className="text-right">Diferença</TableHead>
@@ -154,7 +155,7 @@ export default function Fechamentos() {
               <TableBody>
                 {filteredClosings.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       Nenhum fechamento encontrado.
                     </TableCell>
                   </TableRow>
@@ -168,6 +169,7 @@ export default function Fechamentos() {
                           {format(parseDateWithoutTimezone(closing.date), "dd/MM/yyyy", { locale: ptBR })}
                         </TableCell>
                         <TableCell>{closing.stores?.name || '-'}</TableCell>
+                        <TableCell className="text-right font-mono">{formatCurrency(Number(closing.initial_value))}</TableCell>
                         <TableCell className="text-right font-mono">{formatCurrency(Number(closing.expected_value))}</TableCell>
                         <TableCell className="text-right font-mono">{formatCurrency(Number(closing.counted_value))}</TableCell>
                         <TableCell className={cn("text-right font-mono font-medium", Number(closing.difference) > 0 && "text-success", Number(closing.difference) < 0 && "text-destructive")}>

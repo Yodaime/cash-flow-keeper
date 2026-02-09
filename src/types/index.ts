@@ -32,6 +32,7 @@ export interface CashClosing {
   date: Date;
   storeId: string;
   storeName: string;
+  initialValue: number;
   expectedValue: number;
   countedValue: number;
   difference: number;

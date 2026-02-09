@@ -18,6 +18,7 @@ import { useStores } from '@/hooks/useStores';
 interface ClosingRow {
   date: string;
   store_code: string;
+  initial_value: number;
   expected_value: number;
   counted_value: number;
   observations?: string;
@@ -27,6 +28,7 @@ interface ExportImportProps {
   closings: Array<{
     id: string;
     date: string;
+    initial_value: number;
     expected_value: number;
     counted_value: number;
     difference: number;
@@ -55,12 +57,13 @@ export function ExportImport({ closings }: ExportImportProps) {
       return;
     }
 
-    const headers = ['Data', 'Código Loja', 'Loja', 'Valor Esperado', 'Valor Contado', 'Diferença', 'Status', 'Observações'];
+    const headers = ['Data', 'Código Loja', 'Loja', 'Valor Inicial', 'Valor Esperado', 'Valor Contado', 'Diferença', 'Status', 'Observações'];
     
     const rows = closings.map(closing => [
       format(new Date(closing.date), 'yyyy-MM-dd'),
       closing.stores?.code || '',
       closing.stores?.name || '',
+      (closing.initial_value || 0).toString().replace('.', ','),
       closing.expected_value.toString().replace('.', ','),
       closing.counted_value.toString().replace('.', ','),
       closing.difference.toString().replace('.', ','),
@@ -83,8 +86,8 @@ export function ExportImport({ closings }: ExportImportProps) {
   };
 
   const downloadTemplate = () => {
-    const headers = ['Data', 'Código Loja', 'Valor Esperado', 'Valor Contado', 'Observações'];
-    const exampleRow = ['29/12/2024', 'JC001', '5000,00', '4980,50', 'Exemplo de observação'];
+    const headers = ['Data', 'Código Loja', 'Valor Inicial', 'Valor Esperado', 'Valor Contado', 'Observações'];
+    const exampleRow = ['29/12/2024', 'JC001', '500,00', '5000,00', '4980,50', 'Exemplo de observação'];
     
     const csvContent = [
       headers.join(';'),
@@ -111,12 +114,12 @@ export function ExportImport({ closings }: ExportImportProps) {
       const line = lines[i];
       const cells = line.split(';').map(cell => cell.replace(/^"|"$/g, '').trim());
       
-      if (cells.length < 4) {
+      if (cells.length < 5) {
         parseErrors.push(`Linha ${i + 1}: Número insuficiente de colunas`);
         continue;
       }
 
-      const [dateStr, storeCode, expectedStr, countedStr, observations] = cells;
+      const [dateStr, storeCode, initialStr, expectedStr, countedStr, observations] = cells;
 
       // Validate and parse date (accepts DD/MM/YYYY, DD-MM-YYYY, or YYYY-MM-DD)
       let parsedDate: string | null = null;
@@ -146,10 +149,11 @@ export function ExportImport({ closings }: ExportImportProps) {
       }
 
       // Parse values (handle Brazilian number format)
+      const initialValue = parseFloat(initialStr.replace(/\./g, '').replace(',', '.'));
       const expectedValue = parseFloat(expectedStr.replace(/\./g, '').replace(',', '.'));
       const countedValue = parseFloat(countedStr.replace(/\./g, '').replace(',', '.'));
 
-      if (isNaN(expectedValue) || isNaN(countedValue)) {
+      if (isNaN(expectedValue) || isNaN(countedValue) || isNaN(initialValue)) {
         parseErrors.push(`Linha ${i + 1}: Valores numéricos inválidos`);
         continue;
       }
@@ -157,6 +161,7 @@ export function ExportImport({ closings }: ExportImportProps) {
       rows.push({
         date: parsedDate,
         store_code: storeCode,
+        initial_value: initialValue,
         expected_value: expectedValue,
         counted_value: countedValue,
         observations: observations || undefined,
@@ -211,6 +216,7 @@ export function ExportImport({ closings }: ExportImportProps) {
           date: row.date,
           store_id: store.id,
           user_id: user.id,
+          initial_value: row.initial_value,
           expected_value: row.expected_value,
           counted_value: row.counted_value,
           difference,
@@ -272,7 +278,7 @@ export function ExportImport({ closings }: ExportImportProps) {
                 <div>
                   <p className="font-medium">Arquivo CSV</p>
                   <p className="text-sm text-muted-foreground">
-                    Colunas: Data, Código Loja, Valor Esperado, Valor Contado, Observações
+                    Colunas: Data, Código Loja, Valor Inicial, Valor Esperado, Valor Contado, Observações
                   </p>
                 </div>
               </div>
@@ -324,6 +330,7 @@ export function ExportImport({ closings }: ExportImportProps) {
                       <tr>
                         <th className="px-3 py-2 text-left">Data</th>
                         <th className="px-3 py-2 text-left">Loja</th>
+                        <th className="px-3 py-2 text-right">Inicial</th>
                         <th className="px-3 py-2 text-right">Esperado</th>
                         <th className="px-3 py-2 text-right">Contado</th>
                       </tr>
@@ -333,13 +340,14 @@ export function ExportImport({ closings }: ExportImportProps) {
                         <tr key={i} className="border-t">
                           <td className="px-3 py-2">{row.date}</td>
                           <td className="px-3 py-2">{row.store_code}</td>
+                          <td className="px-3 py-2 text-right font-mono">{formatCurrency(row.initial_value)}</td>
                           <td className="px-3 py-2 text-right font-mono">{formatCurrency(row.expected_value)}</td>
                           <td className="px-3 py-2 text-right font-mono">{formatCurrency(row.counted_value)}</td>
                         </tr>
                       ))}
                       {previewData.length > 10 && (
                         <tr className="border-t">
-                          <td colSpan={4} className="px-3 py-2 text-center text-muted-foreground">
+                          <td colSpan={5} className="px-3 py-2 text-center text-muted-foreground">
                             ... e mais {previewData.length - 10} registros
                           </td>
                         </tr>

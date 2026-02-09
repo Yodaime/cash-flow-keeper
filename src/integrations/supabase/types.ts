@@ -52,6 +52,7 @@ export type Database = {
           difference: number
           expected_value: number
           id: string
+          initial_value: number
           observations: string | null
           organization_id: string | null
           status: Database["public"]["Enums"]["closing_status"]
@@ -68,6 +69,7 @@ export type Database = {
           difference: number
           expected_value: number
           id?: string
+          initial_value?: number
           observations?: string | null
           organization_id?: string | null
           status?: Database["public"]["Enums"]["closing_status"]
@@ -84,6 +86,7 @@ export type Database = {
           difference?: number
           expected_value?: number
           id?: string
+          initial_value?: number
           observations?: string | null
           organization_id?: string | null
           status?: Database["public"]["Enums"]["closing_status"]

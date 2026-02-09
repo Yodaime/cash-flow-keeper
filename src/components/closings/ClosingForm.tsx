@@ -29,6 +29,7 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
   const [date, setDate] = useState<Date>(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [storeId, setStoreId] = useState<string>('');
+  const [initialValue, setInitialValue] = useState<string>('');
   const [expectedValue, setExpectedValue] = useState<string>('');
   const [countedValue, setCountedValue] = useState<string>('');
   const [observations, setObservations] = useState<string>('');
@@ -62,6 +63,7 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
     await createClosing.mutateAsync({
       store_id: storeId,
       date: format(date, 'yyyy-MM-dd'),
+      initial_value: parseValue(initialValue),
       expected_value: parseValue(expectedValue),
       counted_value: parseValue(countedValue),
       observations: observations || undefined,
@@ -69,6 +71,7 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
     
     // Reset form
     setStoreId('');
+    setInitialValue('');
     setExpectedValue('');
     setCountedValue('');
     setObservations('');
@@ -129,6 +132,21 @@ export function ClosingForm({ onSuccess }: ClosingFormProps) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Valor Inicial do Caixa */}
+        <div className="space-y-2">
+          <Label htmlFor="initialValue">Valor Inicial do Caixa</Label>
+          <div className="relative">
+            <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="initialValue"
+              placeholder="0,00"
+              value={initialValue}
+              onChange={(e) => setInitialValue(formatInputCurrency(e.target.value))}
+              className="pl-10"
+            />
+          </div>
         </div>
 
         {/* Valor Esperado */}
