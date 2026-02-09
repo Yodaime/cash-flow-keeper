@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Check, X, UserPlus } from 'lucide-react';
+import { Loader2, Check, X, UserPlus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useAccountRequests, useUpdateAccountRequest, AccountRequest } from '@/hooks/useAccountRequests';
+import { useAccountRequests, useUpdateAccountRequest, useDeleteAccountRequest, AccountRequest } from '@/hooks/useAccountRequests';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -22,6 +22,7 @@ interface AccountRequestsDialogProps {
 export function AccountRequestsDialog({ open, onOpenChange }: AccountRequestsDialogProps) {
   const { data: requests, isLoading } = useAccountRequests();
   const updateRequest = useUpdateAccountRequest();
+  const deleteRequest = useDeleteAccountRequest();
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   const pendingRequests = requests?.filter(r => r.status === 'pending') || [];
@@ -40,6 +41,15 @@ export function AccountRequestsDialog({ open, onOpenChange }: AccountRequestsDia
     setProcessingId(request.id);
     try {
       await updateRequest.mutateAsync({ id: request.id, status: 'rejected' });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setProcessingId(id);
+    try {
+      await deleteRequest.mutateAsync(id);
     } finally {
       setProcessingId(null);
     }
@@ -145,6 +155,7 @@ export function AccountRequestsDialog({ open, onOpenChange }: AccountRequestsDia
                           <TableHead>Email</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Data</TableHead>
+                          <TableHead className="w-12">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -161,6 +172,21 @@ export function AccountRequestsDialog({ open, onOpenChange }: AccountRequestsDia
                                 {request.reviewed_at 
                                   ? format(new Date(request.reviewed_at), "dd/MM/yyyy", { locale: ptBR })
                                   : '-'}
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => handleDelete(request.id)}
+                                  disabled={processingId === request.id}
+                                >
+                                  {processingId === request.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                  )}
+                                </Button>
                               </TableCell>
                             </TableRow>
                           );
