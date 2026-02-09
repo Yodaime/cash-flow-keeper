@@ -1,0 +1,1 @@
+ALTER TABLE public.cash_closings ADD COLUMN initial_value numeric NOT NULL DEFAULT 0;

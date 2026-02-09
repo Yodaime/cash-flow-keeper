@@ -9,6 +9,7 @@ export interface CashClosing {
   user_id: string;
   organization_id: string | null;
   date: string;
+  initial_value: number;
   expected_value: number;
   counted_value: number;
   difference: number;
@@ -65,6 +66,7 @@ export const useCreateClosing = () => {
     mutationFn: async (closing: {
       store_id: string;
       date: string;
+      initial_value: number;
       expected_value: number;
       counted_value: number;
       observations?: string;
@@ -151,6 +153,7 @@ export const useUpdateClosing = () => {
       id: string;
       store_id: string;
       date: string;
+      initial_value: number;
       expected_value: number;
       counted_value: number;
       observations: string | null;
@@ -164,6 +167,7 @@ export const useUpdateClosing = () => {
         .update({
           store_id: closing.store_id,
           date: closing.date,
+          initial_value: closing.initial_value,
           expected_value: closing.expected_value,
           counted_value: closing.counted_value,
           difference,

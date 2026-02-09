@@ -40,6 +40,7 @@ interface EditClosingDialogProps {
 export function EditClosingDialog({ closing, open, onOpenChange }: EditClosingDialogProps) {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [storeId, setStoreId] = useState('');
+  const [initialValue, setInitialValue] = useState('');
   const [expectedValue, setExpectedValue] = useState('');
   const [countedValue, setCountedValue] = useState('');
   const [observations, setObservations] = useState('');
@@ -51,6 +52,7 @@ export function EditClosingDialog({ closing, open, onOpenChange }: EditClosingDi
     if (closing) {
       setDate(new Date(closing.date));
       setStoreId(closing.store_id);
+      setInitialValue(closing.initial_value?.toString() || '0');
       setExpectedValue(closing.expected_value.toString());
       setCountedValue(closing.counted_value.toString());
       setObservations(closing.observations || '');
@@ -87,6 +89,7 @@ export function EditClosingDialog({ closing, open, onOpenChange }: EditClosingDi
       id: closing.id,
       store_id: storeId,
       date: format(date, 'yyyy-MM-dd'),
+      initial_value: parseCurrencyValue(initialValue),
       expected_value: expected,
       counted_value: counted,
       observations: observations.trim() || null,
@@ -151,7 +154,19 @@ export function EditClosingDialog({ closing, open, onOpenChange }: EditClosingDi
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Valor Inicial</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+                <Input
+                  className="pl-10 text-right font-mono"
+                  value={initialValue}
+                  onChange={(e) => setInitialValue(formatCurrencyInput(e.target.value))}
+                  placeholder="0,00"
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>Valor Esperado</Label>
               <div className="relative">
