@@ -18,6 +18,7 @@ import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CashAnalysisDialogProps {
   open: boolean;
@@ -39,10 +40,11 @@ export function CashAnalysisDialog({ open, onOpenChange }: CashAnalysisDialogPro
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  
+
   const formattedStart = format(startDate, 'yyyy-MM-dd');
   const formattedEnd = format(endDate, 'yyyy-MM-dd');
-  
+  const { role } = useAuth();
+
   const { data: closings, isLoading } = useClosings({ startDate: formattedStart, endDate: formattedEnd });
 
   const stats = closings?.reduce(
@@ -54,7 +56,7 @@ export function CashAnalysisDialog({ open, onOpenChange }: CashAnalysisDialogPro
       acc.totalExpected += expected;
       acc.totalCounted += counted;
       acc.totalDifference += diff;
-      
+
       if (diff > 0) {
         acc.surplus += diff;
         acc.surplusCount++;
@@ -62,7 +64,7 @@ export function CashAnalysisDialog({ open, onOpenChange }: CashAnalysisDialogPro
         acc.deficit += Math.abs(diff);
         acc.deficitCount++;
       }
-      
+
       if (closing.status === 'ok' || closing.status === 'aprovado') {
         acc.okCount++;
       } else if (closing.status === 'atencao') {
@@ -70,7 +72,7 @@ export function CashAnalysisDialog({ open, onOpenChange }: CashAnalysisDialogPro
       } else if (closing.status === 'pendente') {
         acc.pendingCount++;
       }
-      
+
       return acc;
     },
     {
@@ -137,9 +139,9 @@ export function CashAnalysisDialog({ open, onOpenChange }: CashAnalysisDialogPro
       setChatMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
     } catch (error) {
       console.error('Error sending message:', error);
-      setChatMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.' 
+      setChatMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.'
       }]);
     } finally {
       setIsSending(false);
@@ -332,90 +334,92 @@ export function CashAnalysisDialog({ open, onOpenChange }: CashAnalysisDialogPro
               </div>
 
               {/* AI Chat Section */}
-              <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Bot className="h-5 w-5 text-primary" />
-                  <span className="text-sm font-medium">Assistente de Análise</span>
-                </div>
-                
-                {chatMessages.length === 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">
-                      Pergunte sobre os dados ou peça sugestões de melhoria:
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {quickQuestions.map((q) => (
-                        <button
-                          key={q}
-                          onClick={() => {
-                            setChatInput(q);
-                          }}
-                          className="text-xs px-2 py-1 rounded-md bg-background border hover:bg-muted transition-colors"
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
+              {role !== 'funcionaria' && (
+                <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-medium">Assistente de Análise</span>
                   </div>
-                )}
 
-                {chatMessages.length > 0 && (
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {chatMessages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={cn(
-                          "flex gap-2 text-sm",
-                          msg.role === 'user' ? "justify-end" : "justify-start"
-                        )}
-                      >
-                        {msg.role === 'assistant' && (
-                          <Bot className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                        )}
+                  {chatMessages.length === 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        Pergunte sobre os dados ou peça sugestões de melhoria:
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {quickQuestions.map((q) => (
+                          <button
+                            key={q}
+                            onClick={() => {
+                              setChatInput(q);
+                            }}
+                            className="text-xs px-2 py-1 rounded-md bg-background border hover:bg-muted transition-colors"
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {chatMessages.length > 0 && (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {chatMessages.map((msg, idx) => (
                         <div
+                          key={idx}
                           className={cn(
-                            "rounded-lg px-3 py-2 max-w-[85%]",
-                            msg.role === 'user'
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-background border"
+                            "flex gap-2 text-sm",
+                            msg.role === 'user' ? "justify-end" : "justify-start"
                           )}
                         >
-                          <p className="whitespace-pre-wrap text-xs">{msg.content}</p>
+                          {msg.role === 'assistant' && (
+                            <Bot className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                          )}
+                          <div
+                            className={cn(
+                              "rounded-lg px-3 py-2 max-w-[85%]",
+                              msg.role === 'user'
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-background border"
+                            )}
+                          >
+                            <p className="whitespace-pre-wrap text-xs">{msg.content}</p>
+                          </div>
+                          {msg.role === 'user' && (
+                            <User className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                          )}
                         </div>
-                        {msg.role === 'user' && (
-                          <User className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                        )}
-                      </div>
-                    ))}
-                    {isSending && (
-                      <div className="flex gap-2 items-center text-muted-foreground">
-                        <Bot className="h-5 w-5 text-primary" />
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-xs">Analisando...</span>
-                      </div>
-                    )}
-                    <div ref={chatEndRef} />
-                  </div>
-                )}
+                      ))}
+                      {isSending && (
+                        <div className="flex gap-2 items-center text-muted-foreground">
+                          <Bot className="h-5 w-5 text-primary" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-xs">Analisando...</span>
+                        </div>
+                      )}
+                      <div ref={chatEndRef} />
+                    </div>
+                  )}
 
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Faça uma pergunta sobre os dados..."
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                    className="text-sm"
-                    disabled={isSending}
-                  />
-                  <Button 
-                    size="icon" 
-                    onClick={handleSendMessage}
-                    disabled={!chatInput.trim() || isSending}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Faça uma pergunta sobre os dados..."
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                      className="text-sm"
+                      disabled={isSending}
+                    />
+                    <Button
+                      size="icon"
+                      onClick={handleSendMessage}
+                      disabled={!chatInput.trim() || isSending}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>
