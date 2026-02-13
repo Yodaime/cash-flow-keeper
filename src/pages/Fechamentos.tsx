@@ -5,6 +5,8 @@ import { ClosingForm } from '@/components/closings/ClosingForm';
 import { ExportImport } from '@/components/closings/ExportImport';
 import { EditClosingDialog } from '@/components/closings/EditClosingDialog';
 import { DeleteClosingDialog } from '@/components/closings/DeleteClosingDialog';
+import { ReportIssueDialog } from '@/components/closings/ReportIssueDialog';
+import { IssuesListDialog } from '@/components/closings/IssuesListDialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -67,7 +69,7 @@ export default function Fechamentos() {
   });
   const updateStatus = useUpdateClosingStatus();
   const { role } = useAuth();
-  
+
   const isSuperAdmin = role === 'super_admin';
   const isAdmin = role === 'administrador' || isSuperAdmin;
 
@@ -89,6 +91,14 @@ export default function Fechamentos() {
             <p className="text-muted-foreground mt-1">Gerencie todos os fechamentos de caixa</p>
           </div>
           <div className="flex items-center gap-3">
+            {(role === 'funcionaria' || role === 'gerente') && (
+              <ReportIssueDialog />
+            )}
+
+            {isAdmin && (
+              <IssuesListDialog />
+            )}
+
             <ExportImport closings={filteredClosings} />
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
@@ -200,7 +210,7 @@ export default function Fechamentos() {
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Editar
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     onClick={() => setDeletingClosing(closing)}
                                     className="text-destructive focus:text-destructive"
                                   >
