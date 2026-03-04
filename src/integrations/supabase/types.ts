@@ -113,6 +113,44 @@ export type Database = {
           },
         ]
       }
+      closing_issues: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          status: string
+          store_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          status?: string
+          store_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          status?: string
+          store_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "closing_issues_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           code: string
