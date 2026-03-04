@@ -21,15 +21,27 @@ export const useClosingIssues = () => {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('closing_issues')
-                .select(`
-          *,
-          profiles:user_id (name, email),
-          stores:store_id (name, code)
-        `)
+                .select(`*, stores (name, code)`)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            return data as ClosingIssue[];
+
+            // Fetch profile info for each unique user_id
+            const userIds = [...new Set((data || []).map(d => d.user_id))];
+            const { data: profiles } = userIds.length
+                ? await supabase.from('profiles').select('id, name, email').in('id', userIds)
+                : { data: [] };
+
+            const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+
+            return (data || []).map(item => ({
+                ...item,
+                status: item.status as 'pending' | 'resolved',
+                profiles: profileMap.get(item.user_id) ? {
+                    name: profileMap.get(item.user_id)!.name,
+                    email: profileMap.get(item.user_id)!.email,
+                } : undefined,
+            })) as ClosingIssue[];
         },
     });
 };
