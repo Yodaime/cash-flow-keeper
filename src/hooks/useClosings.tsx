@@ -33,8 +33,7 @@ export const useClosings = (filters?: { storeId?: string; startDate?: string; en
         .from('cash_closings')
         .select(`
           *,
-          stores (name, code),
-          profiles!cash_closings_user_id_fkey (name)
+          stores (name, code)
         `)
         .order('date', { ascending: false })
         .order('created_at', { ascending: false });
@@ -54,7 +53,19 @@ export const useClosings = (filters?: { storeId?: string; startDate?: string; en
       const { data, error } = await query;
       
       if (error) throw error;
-      return data as CashClosing[];
+
+      // Fetch profile names for user_ids
+      const userIds = [...new Set((data || []).map(c => c.user_id))];
+      const { data: profiles } = userIds.length > 0
+        ? await supabase.from('profiles').select('id, name').in('id', userIds)
+        : { data: [] };
+
+      const profileMap = new Map((profiles || []).map(p => [p.id, p.name]));
+
+      return (data || []).map(c => ({
+        ...c,
+        profiles: { name: profileMap.get(c.user_id) || '-' },
+      })) as CashClosing[];
     },
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
