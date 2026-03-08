@@ -10,6 +10,8 @@ import { IssuesListDialog } from '@/components/closings/IssuesListDialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Dialog,
   DialogContent,
@@ -36,11 +38,11 @@ import {
 import { useClosings, useUpdateClosingStatus, CashClosing } from '@/hooks/useClosings';
 import { useStores } from '@/hooks/useStores';
 import { useAuth } from '@/hooks/useAuth';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { parseDateWithoutTimezone } from '@/lib/dateUtils';
-import { CheckCircle2, AlertTriangle, Clock, Shield, MoreHorizontal, CheckCheck } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Clock, Shield, MoreHorizontal, CheckCheck, CalendarIcon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,12 +62,18 @@ export default function Fechamentos() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [storeFilter, setStoreFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
   const [editingClosing, setEditingClosing] = useState<CashClosing | null>(null);
   const [deletingClosing, setDeletingClosing] = useState<CashClosing | null>(null);
 
   const { data: stores } = useStores();
   const { data: closings, isLoading } = useClosings({
     storeId: storeFilter !== 'all' ? storeFilter : undefined,
+    startDate: format(dateRange.from, 'yyyy-MM-dd'),
+    endDate: format(dateRange.to, 'yyyy-MM-dd'),
   });
   const updateStatus = useUpdateClosingStatus();
   const { role } = useAuth();
@@ -143,6 +151,42 @@ export default function Fechamentos() {
               <SelectItem value="aprovado">Aprovado</SelectItem>
             </SelectContent>
           </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-[240px] justify-start text-left font-normal bg-background",
+                  !dateRange && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })} -{" "}
+                      {format(dateRange.to, "dd/MM/yyyy", { locale: ptBR })}
+                    </>
+                  ) : (
+                    format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })
+                  )
+                ) : (
+                  <span>Selecione o período</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={(range) => range && setDateRange(range)}
+                numberOfMonths={2}
+                locale={ptBR}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         {isLoading ? (
