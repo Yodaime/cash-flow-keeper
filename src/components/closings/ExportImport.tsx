@@ -197,6 +197,13 @@ export function ExportImport({ closings }: ExportImportProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
+      // Get user's organization_id for RLS compliance
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', user.id)
+        .maybeSingle();
+
       const TOLERANCE = 10;
 
       for (const row of previewData) {
@@ -216,6 +223,7 @@ export function ExportImport({ closings }: ExportImportProps) {
           date: row.date,
           store_id: store.id,
           user_id: user.id,
+          organization_id: profile?.organization_id || null,
           initial_value: row.initial_value,
           expected_value: row.expected_value,
           counted_value: row.counted_value,

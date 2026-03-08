@@ -158,14 +158,15 @@ export default function Fechamentos() {
                   <TableHead className="text-right">Esperado</TableHead>
                   <TableHead className="text-right">Contado</TableHead>
                   <TableHead className="text-right">Diferença</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
+                   <TableHead>Status</TableHead>
+                   <TableHead>Responsável</TableHead>
+                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredClosings.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       Nenhum fechamento encontrado.
                     </TableCell>
                   </TableRow>
@@ -190,6 +191,9 @@ export default function Fechamentos() {
                             <StatusIcon className="h-3 w-3" />
                             {status.label}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {closing.profiles?.name || '-'}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
