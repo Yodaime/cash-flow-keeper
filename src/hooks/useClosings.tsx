@@ -20,6 +20,7 @@ export interface CashClosing {
   created_at: string;
   updated_at: string;
   stores?: { name: string; code: string } | null;
+  profiles?: { name: string } | null;
 }
 
 const TOLERANCE_LIMIT = 10;
@@ -32,7 +33,8 @@ export const useClosings = (filters?: { storeId?: string; startDate?: string; en
         .from('cash_closings')
         .select(`
           *,
-          stores (name, code)
+          stores (name, code),
+          profiles!cash_closings_user_id_fkey (name)
         `)
         .order('date', { ascending: false })
         .order('created_at', { ascending: false });
